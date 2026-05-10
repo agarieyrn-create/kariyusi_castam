@@ -166,6 +166,40 @@ h3 {
   flex-wrap: wrap;
 }
 
+.live-brief {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  max-width: 720px;
+  margin-top: 22px;
+}
+
+.live-brief div {
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid rgba(22, 114, 125, .18);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, .68);
+  box-shadow: 0 10px 24px rgba(23, 35, 38, .06);
+}
+
+.live-brief span {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.live-brief strong {
+  display: block;
+  overflow: hidden;
+  font-size: 16px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .button {
   display: inline-flex;
   align-items: center;
@@ -438,6 +472,42 @@ textarea {
   background: var(--soft);
   font-size: 12px;
   font-weight: 800;
+}
+
+.proposal-score {
+  display: grid;
+  gap: 8px;
+  margin-top: 13px;
+}
+
+.proposal-score span {
+  display: grid;
+  grid-template-columns: 74px 1fr 34px;
+  align-items: center;
+  gap: 9px;
+  color: #334345;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.proposal-score i {
+  height: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #dbe7e2;
+}
+
+.proposal-score i::before {
+  content: "";
+  display: block;
+  width: var(--score);
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--teal), var(--green), var(--gold));
+}
+
+.proposal-score strong {
+  text-align: right;
 }
 
 .asset-gallery {
@@ -981,6 +1051,10 @@ textarea {
   .main-preview {
     grid-column: 1 / -1;
   }
+
+  .live-brief {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 680px) {
@@ -1006,6 +1080,7 @@ textarea {
   .measure-grid,
   .proposal-grid,
   .asset-gallery,
+  .live-brief,
   .hero-workbench,
   .editor-canvas {
     grid-template-columns: 1fr;

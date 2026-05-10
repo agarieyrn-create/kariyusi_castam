@@ -34,6 +34,30 @@
     };
   }
 
+  function syncLiveBrief() {
+    const scene = getSelectedChoice("scene") || state.brief.scene;
+    const mood = getSelectedChoice("mood") || state.brief.mood;
+    const motif = document.getElementById("motifSelect")?.value || state.brief.motif;
+    const sceneTarget = document.getElementById("liveScene");
+    const moodTarget = document.getElementById("liveMood");
+    const motifTarget = document.getElementById("liveMotif");
+    if (sceneTarget) sceneTarget.textContent = scene;
+    if (moodTarget) moodTarget.textContent = mood;
+    if (motifTarget) motifTarget.textContent = motif;
+  }
+
+  function animateDynamicCards() {
+    const items = document.querySelectorAll(".proposal-card, .asset-card");
+    items.forEach((item, index) => {
+      item.classList.remove("visible");
+      item.classList.add("reveal");
+      item.style.transitionDelay = `${Math.min(index * 45, 240)}ms`;
+    });
+    requestAnimationFrame(() => {
+      items.forEach((item) => item.classList.add("visible"));
+    });
+  }
+
   function syncInputs() {
     document.getElementById("editPalette").value = state.edit.palette;
     document.getElementById("editDensity").value = state.edit.density;
@@ -91,6 +115,8 @@
     renderers.renderFitReport(document.getElementById("fitReport"), state.model, fit);
     renderers.renderDesignNotes(document.getElementById("designNotes"), proposal, state.edit, state.catalog.assets);
     renderers.renderSpec(document.getElementById("specSheet"), proposal, state.brief, state.edit, fit, state.estimate);
+    syncLiveBrief();
+    animateDynamicCards();
     window.KariyushiLatest3D = {
       proposal,
       palettes: state.catalog.palettes,
@@ -135,6 +161,7 @@
         if (!button) return;
         grid.querySelectorAll(".choice").forEach((item) => item.classList.remove("selected"));
         button.classList.add("selected");
+        syncLiveBrief();
       });
     });
   }
@@ -243,6 +270,7 @@
       document.getElementById("proposals").scrollIntoView({ behavior: "smooth" });
     });
     document.getElementById("regenerate").addEventListener("click", generateDesigns);
+    document.getElementById("motifSelect").addEventListener("input", syncLiveBrief);
     document.getElementById("proposalList").addEventListener("click", (event) => {
       const button = event.target.closest(".select-proposal");
       if (!button) return;
@@ -289,14 +317,13 @@
     const sections = [...document.querySelectorAll("main section[id]")];
     const navLinks = [...document.querySelectorAll(".nav a[href^='#']")];
     const revealItems = [...document.querySelectorAll(".section-head, fieldset, .proposal-card, .asset-card, .control-panel, .preview-shell, .model-preview, .spec-sheet")];
-    revealItems.forEach((item) => item.classList.add("reveal"));
-
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) entry.target.classList.add("visible");
-      });
-    }, { threshold: 0.14 });
-    revealItems.forEach((item) => observer.observe(item));
+    revealItems.forEach((item, index) => {
+      item.classList.add("reveal");
+      item.style.transitionDelay = `${Math.min(index * 35, 220)}ms`;
+    });
+    requestAnimationFrame(() => {
+      revealItems.forEach((item) => item.classList.add("visible"));
+    });
 
     function updateScrollState() {
       const height = document.documentElement.scrollHeight - window.innerHeight;

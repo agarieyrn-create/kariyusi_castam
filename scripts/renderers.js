@@ -130,6 +130,7 @@
   function renderProposals(target, proposals, selectedId, palettes, config, assets) {
     target.innerHTML = proposals.map((proposal) => {
       const asset = findAsset(assets, proposal.assetId);
+      const score = designScore(proposal, proposal);
       return `
         <article class="proposal-card ${proposal.id === selectedId ? "selected" : ""}">
           <div class="proposal-visual">
@@ -140,6 +141,11 @@
             <h3>${esc(proposal.title)}</h3>
             <p>${esc(proposal.direction)}</p>
             <div class="tags">${proposal.tags.map((tag) => `<span class="tag">${esc(tag)}</span>`).join("")}</div>
+            <div class="proposal-score" aria-label="提案スコア">
+              <span><b>沖縄らしさ</b><i style="--score:${score.okinawa}%"></i><strong>${score.okinawa}</strong></span>
+              <span><b>量産適性</b><i style="--score:${score.production}%"></i><strong>${score.production}</strong></span>
+              <span><b>視認性</b><i style="--score:${score.visibility}%"></i><strong>${score.visibility}</strong></span>
+            </div>
           </div>
           <button class="button secondary wide select-proposal" type="button" data-id="${esc(proposal.id)}">この案を編集する</button>
         </article>`;
