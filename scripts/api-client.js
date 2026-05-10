@@ -26,6 +26,7 @@
     if (lane.id === "uniform") score += pattern.formal;
     if (lane.id === "heritage") score += pattern.okinawa;
     if (lane.id === "resort") score += pattern.bold;
+    if (brief.scene === "仕事") score += pattern.formal + 2;
     return score;
   }
 

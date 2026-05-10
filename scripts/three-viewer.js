@@ -22,11 +22,17 @@ function normalizeAngle(value) {
   return ((Number(value) || 0) % 360 + 360) % 360;
 }
 
-function makeFabricTexture(palette, edit, proposal) {
+function findAsset(assets, id) {
+  return assets?.find((item) => item.id === id) || null;
+}
+
+function makeFabricTexture(palette, edit, proposal, assets) {
   const size = 512;
   const density = Number(edit.density || proposal.density || 46);
   const scale = Number(edit.scale || proposal.scale || 100) / 100;
   const tile = Math.max(72, density * 1.85 / scale);
+  const asset = findAsset(assets, edit.assetId || proposal.assetId);
+  const motifKey = asset?.type === "motif" ? asset.id : proposal.pattern?.id || asset?.id || "leaf";
   const canvas = document.createElement("canvas");
   canvas.width = size;
   canvas.height = size;
@@ -37,7 +43,7 @@ function makeFabricTexture(palette, edit, proposal) {
   for (let y = -tile; y < size + tile; y += tile) {
     for (let x = -tile; x < size + tile; x += tile) {
       const offset = (Math.floor(y / tile) % 2) * tile * .45;
-      drawMotif(ctx, x + offset, y, tile, palette);
+      drawMotif(ctx, x + offset, y, tile, palette, motifKey);
     }
   }
 
@@ -55,7 +61,7 @@ function makeFabricTexture(palette, edit, proposal) {
   return texture;
 }
 
-function drawMotif(ctx, x, y, tile, palette) {
+function drawMotif(ctx, x, y, tile, palette, motifKey) {
   ctx.save();
   ctx.translate(x, y);
   ctx.lineWidth = Math.max(4, tile * .05);
@@ -83,6 +89,38 @@ function drawMotif(ctx, x, y, tile, palette) {
   ctx.beginPath();
   ctx.arc(tile * .48, tile * .31, tile * .052, 0, Math.PI * 2);
   ctx.fill();
+
+  if (String(motifKey).includes("009") || String(motifKey).includes("hibiscus")) {
+    ctx.fillStyle = palette.sub;
+    ctx.globalAlpha = .82;
+    for (let i = 0; i < 5; i++) {
+      ctx.beginPath();
+      ctx.ellipse(tile * .62, tile * .62, tile * .08, tile * .18, i * 1.25, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  if (String(motifKey).includes("031") || String(motifKey).includes("wave")) {
+    ctx.strokeStyle = palette.accent;
+    ctx.globalAlpha = .78;
+    ctx.lineWidth = Math.max(3, tile * .04);
+    for (let i = 0; i < 3; i++) {
+      ctx.beginPath();
+      ctx.arc(tile * (.68 + i * .08), tile * .72, tile * (.18 + i * .04), Math.PI, Math.PI * 1.85);
+      ctx.stroke();
+    }
+  }
+
+  if (String(motifKey).includes("017") || String(motifKey).includes("shisa")) {
+    ctx.fillStyle = palette.dark;
+    ctx.globalAlpha = .72;
+    ctx.beginPath();
+    ctx.moveTo(tile * .68, tile * .2);
+    ctx.lineTo(tile * .86, tile * .44);
+    ctx.lineTo(tile * .58, tile * .48);
+    ctx.closePath();
+    ctx.fill();
+  }
   ctx.restore();
 }
 
@@ -187,7 +225,7 @@ function rebuild(payload) {
   const mannequin = makeMannequin(bodyScale);
   state.root.add(mannequin);
 
-  const shirt = makeShirt(palette, edit, proposal, shirtScale);
+  const shirt = makeShirt(palette, edit, proposal, shirtScale, payload.assets);
   state.shirt = shirt;
   state.root.add(shirt);
 
@@ -227,9 +265,9 @@ function addLimb(group, material, x, y, rotZ, radius, length, lean) {
   group.add(limb);
 }
 
-function makeShirt(palette, edit, proposal, scale) {
+function makeShirt(palette, edit, proposal, scale, assets) {
   const group = new THREE.Group();
-  const fabric = makeFabricTexture(palette, edit, proposal);
+  const fabric = makeFabricTexture(palette, edit, proposal, assets);
   const mat = new THREE.MeshStandardMaterial({
     map: fabric,
     roughness: .82,

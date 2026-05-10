@@ -281,6 +281,34 @@
     });
   }
 
+  function setupSiteMotion() {
+    const progress = document.createElement("div");
+    progress.className = "scroll-progress";
+    document.body.prepend(progress);
+
+    const sections = [...document.querySelectorAll("main section[id]")];
+    const navLinks = [...document.querySelectorAll(".nav a[href^='#']")];
+    const revealItems = [...document.querySelectorAll(".section-head, fieldset, .proposal-card, .asset-card, .control-panel, .preview-shell, .model-preview, .spec-sheet")];
+    revealItems.forEach((item) => item.classList.add("reveal"));
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) entry.target.classList.add("visible");
+      });
+    }, { threshold: 0.14 });
+    revealItems.forEach((item) => observer.observe(item));
+
+    function updateScrollState() {
+      const height = document.documentElement.scrollHeight - window.innerHeight;
+      progress.style.transform = `scaleX(${height > 0 ? window.scrollY / height : 0})`;
+      const current = sections.findLast((section) => section.getBoundingClientRect().top <= 120);
+      navLinks.forEach((link) => link.classList.toggle("active", current && link.getAttribute("href") === `#${current.id}`));
+    }
+
+    window.addEventListener("scroll", updateScrollState, { passive: true });
+    updateScrollState();
+  }
+
   async function init() {
     state.catalog = await api.getCatalog();
     setupChoices();
@@ -288,6 +316,7 @@
     setupEditor();
     setupModel();
     setupForms();
+    setupSiteMotion();
     await generateDesigns();
   }
 

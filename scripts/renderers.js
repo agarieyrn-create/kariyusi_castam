@@ -36,10 +36,11 @@
     return ((Number(value) || 0) % 360 + 360) % 360;
   }
 
-  function fabricDefs(ids, palette, density, scale, assetHref) {
+  function fabricDefs(ids, palette, density, scale, asset) {
     const tile = Math.max(68, Number(density) * 1.9);
+    const assetHref = asset?.type === "motif" ? asset.href : "";
     const image = assetHref
-      ? `<image href="${esc(assetHref)}" x="0" y="0" width="${tile}" height="${tile}" preserveAspectRatio="xMidYMid slice" opacity=".18"></image>`
+      ? `<image href="${esc(assetHref)}" x="${tile * .18}" y="${tile * .16}" width="${tile * .42}" height="${tile * .42}" preserveAspectRatio="xMidYMid meet" opacity=".28"></image>`
       : "";
     return `
       <linearGradient id="${ids.shadow}" x1="0" x2="1">
@@ -65,7 +66,7 @@
     const density = Number(edit.density || proposal.density || 46);
     const scale = Number(edit.scale || proposal.scale || 100) / 100;
     const asset = findAsset(options.assets, edit.assetId || proposal.assetId);
-    const href = asset && options.config ? assetUrl(options.config, asset) : "";
+    const fabricAsset = asset && options.config ? { ...asset, href: assetUrl(options.config, asset) } : null;
     const ids = { fabric: uid("fabric"), shadow: uid("clothShade") };
     const logo = edit.logo || proposal.logo;
     const collar = edit.collar || proposal.collar;
@@ -94,7 +95,7 @@
       <path class="shirt-seam subtle" d="M140 96 L140 294"></path>` : "";
 
     return `
-      <defs>${fabricDefs(ids, palette, density, scale, href)}</defs>
+      <defs>${fabricDefs(ids, palette, density, scale, fabricAsset)}</defs>
       <path class="shirt-drop" d="M64 78 L109 49 L124 62 Q140 75 156 62 L171 49 L216 78 L266 146 L221 176 L206 152 L203 296 Q170 308 140 304 Q110 308 77 296 L74 152 L59 176 L14 146 Z"></path>
       <path class="shirt-panel sleeve-left" d="M64 78 L109 49 L99 112 L59 176 L14 146 Z" fill="url(#${ids.fabric})"></path>
       <path class="shirt-panel sleeve-right" d="M216 78 L171 49 L181 112 L221 176 L266 146 Z" fill="url(#${ids.fabric})"></path>
@@ -147,8 +148,9 @@
 
   function renderAssets(target, assets, config, selectedAssetId) {
     target.innerHTML = assets.map((asset) => `
-      <button class="asset-card ${asset.id === selectedAssetId ? "selected" : ""}" type="button" data-id="${esc(asset.id)}">
+      <button class="asset-card ${asset.id === selectedAssetId ? "selected" : ""}" type="button" data-id="${esc(asset.id)}" data-type="${esc(asset.type)}">
         <img src="${esc(assetUrl(config, asset))}" alt="${esc(asset.title)}">
+        <b>${asset.type === "motif" ? "柄素材" : "参考写真"}</b>
         <span>${esc(asset.title)}</span>
         <small>${asset.tags.map(esc).join(" / ")}</small>
       </button>
