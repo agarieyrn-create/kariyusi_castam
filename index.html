@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>オリジナルかりゆしウェア デザイン開発システム</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header class="app-header">
+      <a class="brand" href="#top" aria-label="トップへ戻る">
+        <span class="brand-mark">K</span>
+        <span>かりゆしウェア設計室</span>
+      </a>
+      <nav class="nav" aria-label="主要メニュー">
+        <a href="#brief">条件入力</a>
+        <a href="#proposals">提案</a>
+        <a href="#editor">編集</a>
+        <a href="#model-check">模型・サイズ</a>
+        <a class="nav-cta" href="#order">仕様書</a>
+      </nav>
+    </header>
+
+    <main>
+      <section id="top" class="hero section">
+        <div class="hero-copy">
+          <p class="eyebrow">Original Kariyushi Wear Planner</p>
+          <h1>柄づくりから模型確認まで、発注前の判断に使える設計システム</h1>
+          <p class="lead">
+            用途・雰囲気・体型寸法を入力すると、実画像の参考例、編集可能な柄プレビュー、
+            模型での着丈・身幅・肩幅チェック、概算見積りまで一画面で確認できます。
+          </p>
+          <div class="hero-actions">
+            <a class="button primary" href="#brief">条件を入力する</a>
+            <a class="button secondary" href="#model-check">模型チェックを見る</a>
+          </div>
+        </div>
+        <div class="hero-workbench" aria-label="かりゆしウェアの設計プレビュー">
+          <div class="hero-card main-preview">
+            <div id="heroPreview"></div>
+          </div>
+          <div class="hero-card metrics-card">
+            <span>推奨サイズ</span>
+            <strong id="heroSize">M</strong>
+            <small id="heroFit">標準的なゆとり</small>
+          </div>
+          <div class="hero-card swatch-card">
+            <span>現在の配色</span>
+            <div id="heroSwatches" class="mini-swatches"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="brief" class="section">
+        <div class="section-head">
+          <p class="eyebrow">Design Brief</p>
+          <h2>用途とデザイン条件を決める</h2>
+        </div>
+        <form id="briefForm" class="brief-grid">
+          <fieldset>
+            <legend>使用シーン</legend>
+            <div class="choice-grid" data-name="scene">
+              <button type="button" class="choice selected" data-value="ホテル・店舗制服">ホテル・店舗制服</button>
+              <button type="button" class="choice" data-value="イベント・式典">イベント・式典</button>
+              <button type="button" class="choice" data-value="観光・物販">観光・物販</button>
+              <button type="button" class="choice" data-value="チームウェア">チームウェア</button>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>見せたい印象</legend>
+            <div class="choice-grid" data-name="mood">
+              <button type="button" class="choice selected" data-value="上品">上品</button>
+              <button type="button" class="choice" data-value="伝統的">伝統的</button>
+              <button type="button" class="choice" data-value="リゾート">リゾート</button>
+              <button type="button" class="choice" data-value="現代的">現代的</button>
+              <button type="button" class="choice" data-value="大胆">大胆</button>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>基本色</legend>
+            <div class="choice-grid swatches" data-name="palette">
+              <button type="button" class="choice selected" data-value="海風ブルー"><span style="--swatch:#1c7f93"></span>海風ブルー</button>
+              <button type="button" class="choice" data-value="月桃ホワイト"><span style="--swatch:#f8f5e9"></span>月桃ホワイト</button>
+              <button type="button" class="choice" data-value="琉球レッド"><span style="--swatch:#c94f49"></span>琉球レッド</button>
+              <button type="button" class="choice" data-value="夜海ブラック"><span style="--swatch:#172326"></span>夜海ブラック</button>
+              <button type="button" class="choice" data-value="若葉グリーン"><span style="--swatch:#5f8f61"></span>若葉グリーン</button>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>柄と数量</legend>
+            <label class="field-label">主役モチーフ
+              <select id="motifSelect">
+                <option>AIに任せる</option>
+                <option>ハイビスカス</option>
+                <option>シーサー</option>
+                <option>波模様</option>
+                <option>ヤシ葉</option>
+                <option>紅型風</option>
+              </select>
+            </label>
+            <label class="field-label">予定枚数
+              <input id="quantityInput" type="number" min="10" max="1000" step="10" value="50">
+            </label>
+          </fieldset>
+
+          <button class="button primary wide" type="submit">条件から3案を作る</button>
+        </form>
+      </section>
+
+      <section id="proposals" class="section muted-section">
+        <div class="section-head row">
+          <div>
+            <p class="eyebrow">Generated Proposals</p>
+            <h2>比較できるデザイン案</h2>
+          </div>
+          <button id="regenerate" class="button secondary" type="button">再提案</button>
+        </div>
+        <div id="proposalList" class="proposal-grid"></div>
+      </section>
+
+      <section id="references" class="section">
+        <div class="section-head row">
+          <div>
+            <p class="eyebrow">Reference Assets</p>
+            <h2>既存写真・素材から方向性を選ぶ</h2>
+          </div>
+          <span class="hint">クリックすると編集プレビューに反映します</span>
+        </div>
+        <div id="assetGallery" class="asset-gallery"></div>
+      </section>
+
+      <section id="editor" class="section editor-section">
+        <div class="section-head">
+          <p class="eyebrow">Pattern Editor</p>
+          <h2>柄・配色・ロゴ位置を調整する</h2>
+        </div>
+        <div class="editor-layout">
+          <div class="preview-shell">
+            <div id="editorPreview"></div>
+          </div>
+          <div class="control-panel">
+            <label class="field-label">配色
+              <select id="editPalette"></select>
+            </label>
+            <label class="field-label">柄の密度
+              <input id="editDensity" type="range" min="26" max="78" value="46">
+            </label>
+            <label class="field-label">柄の大きさ
+              <input id="editScale" type="range" min="70" max="145" value="100">
+            </label>
+            <label class="field-label">衿型
+              <select id="editCollar">
+                <option>開襟</option>
+                <option>ボタンダウン</option>
+                <option>スタンドカラー</option>
+              </select>
+            </label>
+            <label class="field-label">ロゴ位置
+              <select id="editLogo">
+                <option value="leftChest">左胸</option>
+                <option value="sleeve">袖</option>
+                <option value="back">背面</option>
+                <option value="none">なし</option>
+              </select>
+            </label>
+            <label class="field-label">ボタン
+              <select id="editButton">
+                <option>黒蝶貝風</option>
+                <option>白蝶貝風</option>
+                <option>木目風</option>
+              </select>
+            </label>
+            <div id="designNotes" class="notes-box"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="model-check" class="section model-section">
+        <div class="section-head row">
+          <div>
+            <p class="eyebrow">Model & Size Check</p>
+            <h2>模型で着丈・身幅・肩幅を確認する</h2>
+          </div>
+          <div class="segmented" role="group" aria-label="模型表示の切り替え">
+            <button class="segment selected" type="button" data-view="front">正面</button>
+            <button class="segment" type="button" data-view="back">背面</button>
+            <button class="segment" type="button" data-view="side">横</button>
+          </div>
+        </div>
+        <div class="model-layout">
+          <div class="model-preview">
+            <div id="modelPreview"></div>
+          </div>
+          <div class="control-panel">
+            <div class="panel-title">着用者寸法</div>
+            <div class="measure-grid">
+              <label class="field-label">身長 cm
+                <input id="heightInput" type="number" min="140" max="205" value="170">
+              </label>
+              <label class="field-label">胸囲 cm
+                <input id="chestInput" type="number" min="70" max="130" value="92">
+              </label>
+              <label class="field-label">ウエスト cm
+                <input id="waistInput" type="number" min="60" max="130" value="82">
+              </label>
+              <label class="field-label">肩幅 cm
+                <input id="shoulderInput" type="number" min="34" max="60" value="44">
+              </label>
+            </div>
+            <label class="field-label">体型模型
+              <select id="bodyType">
+                <option value="slim">細身</option>
+                <option value="normal" selected>標準</option>
+                <option value="strong">がっしり</option>
+              </select>
+            </label>
+            <label class="field-label">確認サイズ
+              <select id="sizeSelect">
+                <option>S</option>
+                <option selected>M</option>
+                <option>L</option>
+                <option>LL</option>
+                <option>3L</option>
+              </select>
+            </label>
+            <div id="fitReport" class="fit-report"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="order" class="section order-section">
+        <div class="section-head">
+          <p class="eyebrow">Specification</p>
+          <h2>発注前の確認用仕様書</h2>
+        </div>
+        <div class="spec-layout">
+          <div id="specSheet" class="spec-sheet"></div>
+          <form id="contactForm" class="contact-form">
+            <label class="field-label">お名前・会社名
+              <input required type="text" placeholder="例：沖縄サンプルホテル">
+            </label>
+            <label class="field-label">メールアドレス
+              <input required type="email" placeholder="example@example.com">
+            </label>
+            <label class="field-label">相談内容
+              <textarea rows="4" placeholder="納期、必要枚数、ロゴデータの有無など"></textarea>
+            </label>
+            <button class="button primary wide" type="submit">仕様内容を保存する</button>
+            <p id="contactStatus" class="status" role="status"></p>
+          </form>
+        </div>
+      </section>
+    </main>
+
+    <script src="scripts/config.js"></script>
+    <script src="scripts/mock-db.js"></script>
+    <script src="scripts/api-client.js"></script>
+    <script src="scripts/renderers.js"></script>
+    <script src="scripts/app.js"></script>
+    <script type="module" src="scripts/three-viewer.js"></script>
+  </body>
+</html>
