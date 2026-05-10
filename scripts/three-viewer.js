@@ -239,29 +239,42 @@ function makeShirt(palette, edit, proposal, scale) {
   const seamMat = new THREE.MeshStandardMaterial({ color: "#1d2e31", roughness: .8 });
   const collarMat = new THREE.MeshStandardMaterial({ color: "#fbfbf2", roughness: .78, side: THREE.DoubleSide });
 
-  const body = new THREE.Mesh(new THREE.BoxGeometry(1.28 * scale, 1.58, .62), mat);
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(.62 * scale, .72 * scale, 1.58, 72, 8, false), mat);
   body.position.y = 1.78;
+  body.scale.z = .45;
   body.castShadow = true;
   group.add(body);
 
-  const frontLeft = new THREE.Mesh(new THREE.BoxGeometry(.025, 1.5, .36), seamMat);
-  frontLeft.position.set(-.012, 1.77, .33);
-  group.add(frontLeft);
+  const placket = new THREE.Mesh(
+    new THREE.BoxGeometry(.035, 1.48, .018),
+    seamMat
+  );
+  placket.position.set(0, 1.78, .33);
+  group.add(placket);
+
+  const hem = new THREE.Mesh(
+    new THREE.TorusGeometry(.64 * scale, .012, 8, 96),
+    seamMat
+  );
+  hem.position.y = .98;
+  hem.scale.z = .46;
+  hem.rotation.x = Math.PI / 2;
+  group.add(hem);
 
   for (let i = 0; i < 4; i++) {
     const button = new THREE.Mesh(new THREE.SphereGeometry(.035, 18, 12), seamMat);
-    button.position.set(.09, 2.35 - i * .28, .64);
+    button.position.set(.09, 2.35 - i * .28, .35);
     group.add(button);
   }
 
   const pocket = new THREE.Mesh(new THREE.BoxGeometry(.26, .28, .018), new THREE.MeshStandardMaterial({ color: "#ffffff", transparent: true, opacity: .24 }));
-  pocket.position.set(.34 * scale, 2.1, .65);
+  pocket.position.set(.34 * scale, 2.1, .35);
   group.add(pocket);
 
-  const sleeveGeometry = new THREE.CylinderGeometry(.16, .24, .52, 28, 1, true);
+  const sleeveGeometry = new THREE.CylinderGeometry(.17, .27, .58, 32, 1, true);
   const leftSleeve = new THREE.Mesh(sleeveGeometry, mat);
-  leftSleeve.position.set(-.78 * scale, 2.2, .02);
-  leftSleeve.rotation.z = Math.PI / 2 - .45;
+  leftSleeve.position.set(-.78 * scale, 2.22, .02);
+  leftSleeve.rotation.z = Math.PI / 2 - .5;
   leftSleeve.rotation.y = .2;
   leftSleeve.castShadow = true;
   group.add(leftSleeve);
@@ -272,9 +285,9 @@ function makeShirt(palette, edit, proposal, scale) {
   rightSleeve.rotation.y = -.2;
   group.add(rightSleeve);
 
-  const collarL = new THREE.Mesh(new THREE.ConeGeometry(.24, .42, 3), collarMat);
-  collarL.position.set(-.22, 2.72, .23);
-  collarL.rotation.set(Math.PI / 2, 0, -.22);
+  const collarL = new THREE.Mesh(new THREE.ConeGeometry(.25, .45, 3), collarMat);
+  collarL.position.set(-.24, 2.69, .29);
+  collarL.rotation.set(Math.PI / 2, .06, -.25);
   group.add(collarL);
   const collarR = collarL.clone();
   collarR.position.x = .22;
@@ -282,12 +295,13 @@ function makeShirt(palette, edit, proposal, scale) {
   group.add(collarR);
 
   if ((edit.logo || proposal.logo) !== "none") {
-    group.add(makeLogo((edit.logo || proposal.logo) === "back" ? 0 : .3, (edit.logo || proposal.logo) === "back" ? -.22 : .39));
+    const logoPlace = edit.logo || proposal.logo;
+    group.add(makeLogo(logoPlace === "back" ? 0 : .3, logoPlace === "back" ? -.35 : .36, logoPlace === "back"));
   }
   return group;
 }
 
-function makeLogo(x, z) {
+function makeLogo(x, z, back = false) {
   const canvas = document.createElement("canvas");
   canvas.width = 256;
   canvas.height = 128;
@@ -305,13 +319,24 @@ function makeLogo(x, z) {
     new THREE.PlaneGeometry(.32, .16),
     new THREE.MeshBasicMaterial({ map: texture, transparent: true })
   );
-  logo.position.set(x, 2.22, z + .27);
+  logo.position.set(x, 2.22, z);
+  if (back) logo.rotation.y = Math.PI;
   return logo;
 }
 
 function makeMeasurementGuides(fit) {
   const group = new THREE.Group();
   const mat = new THREE.LineBasicMaterial({ color: "#16727d", transparent: true, opacity: .72 });
+  const easeColor = fit.chestEase < 8 ? "#d75c4f" : fit.chestEase > 24 ? "#d7a33f" : "#16727d";
+  const ring = new THREE.Mesh(
+    new THREE.TorusGeometry(.74, .012, 8, 96),
+    new THREE.MeshBasicMaterial({ color: easeColor, transparent: true, opacity: .72 })
+  );
+  ring.position.y = 2.08;
+  ring.scale.z = .48;
+  ring.rotation.x = Math.PI / 2;
+  group.add(ring);
+
   const points = [
     new THREE.Vector3(-.72, 2.55, .52),
     new THREE.Vector3(.72, 2.55, .52),
