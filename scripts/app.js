@@ -74,13 +74,19 @@
     document.getElementById("sizeSelect").value = state.model.size;
   }
 
+  function syncMannequinSegments() {
+    document.querySelectorAll("#mannequinSegments .segment").forEach((button) => {
+      button.classList.toggle("selected", button.dataset.mannequin === state.model.mannequin);
+    });
+  }
+
   function syncModelSegments() {
     const rotation = ((Number(state.model.rotation) || 0) % 360 + 360) % 360;
     const targets = { front: 0, side: 90, back: 180 };
     document.querySelectorAll(".segment").forEach((button) => {
       const target = targets[button.dataset.view];
       const diff = Math.abs(((rotation - target + 540) % 360) - 180);
-      button.classList.toggle("selected", diff <= 12);
+      if (button.dataset.view) button.classList.toggle("selected", diff <= 12);
     });
   }
 
@@ -148,6 +154,7 @@
     window.dispatchEvent(new CustomEvent("kariyushi:render3d", { detail: window.KariyushiLatest3D }));
     syncInputs();
     syncModelSegments();
+    syncMannequinSegments();
   }
 
   async function generateDesigns() {
@@ -222,11 +229,18 @@
   }
 
   function setupModel() {
-    document.querySelector(".segmented").addEventListener("click", (event) => {
+    document.getElementById("viewSegments").addEventListener("click", (event) => {
       const button = event.target.closest(".segment");
       if (!button) return;
       state.model.view = button.dataset.view;
       state.model.rotation = { front: 0, side: 90, back: 180 }[button.dataset.view] || 0;
+      renderAll();
+    });
+
+    document.getElementById("mannequinSegments").addEventListener("click", (event) => {
+      const button = event.target.closest(".segment");
+      if (!button) return;
+      state.model.mannequin = button.dataset.mannequin;
       renderAll();
     });
 

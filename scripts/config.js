@@ -4,6 +4,11 @@
   window.KariyushiConfig = {
     mode: "mock",
     assetBaseUrl: "デザイン写真/",
+    modelPhotoBaseUrl: "3Dモデル/",
+    modelPhotos: {
+      male: { label: "男性", file: "男性.jpg" },
+      female: { label: "女性", file: "女性.jpg" }
+    },
     storageKeys: {
       sessions: "kariyushi-design-sessions",
       inquiries: "kariyushi-design-inquiries",
@@ -46,7 +51,8 @@
       chest: 92,
       waist: 82,
       shoulder: 44,
-      size: "M"
+      size: "M",
+      mannequin: "male"
     }
   };
 })();

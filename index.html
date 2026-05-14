@@ -334,7 +334,7 @@
           </div>
           <div style="display:flex;gap:8px;align-items:center">
             <button id="toggleBodyBtn" class="button secondary" type="button">🧍 BODY ON/OFF</button>
-            <div class="segmented" role="group" aria-label="模型表示の切り替え">
+            <div id="viewSegments" class="segmented" role="group" aria-label="模型表示の切り替え">
               <button class="segment selected" type="button" data-view="front">正面</button>
               <button class="segment" type="button" data-view="back">背面</button>
               <button class="segment" type="button" data-view="side">横</button>
@@ -360,6 +360,11 @@
               <label class="field-label">肩幅 cm
                 <input id="shoulderInput" type="number" min="34" max="60" value="44">
               </label>
+            </div>
+            <div class="panel-title">人物モデル</div>
+            <div id="mannequinSegments" class="segmented model-selector" role="group" aria-label="人物モデルの切り替え">
+              <button class="segment selected" type="button" data-mannequin="male">男性</button>
+              <button class="segment" type="button" data-mannequin="female">女性</button>
             </div>
             <label class="field-label">体型模型
               <select id="bodyType">

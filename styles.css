@@ -848,6 +848,15 @@ textarea {
   background: #fff;
 }
 
+.model-selector {
+  width: 100%;
+  margin: -4px 0 16px;
+}
+
+.model-selector .segment {
+  flex: 1;
+}
+
 .segment {
   min-width: 70px;
   min-height: 35px;

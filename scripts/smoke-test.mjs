@@ -26,6 +26,12 @@ for (const file of assetFiles) {
   mustExist(join("デザイン写真", file), "素材画像");
 }
 
+const config = read("scripts/config.js");
+const modelPhotoFiles = [...config.matchAll(/file:\s*"([^"]+\.jpg)"/g)].map((match) => match[1]);
+for (const file of modelPhotoFiles) {
+  mustExist(join("3Dモデル", file), "3Dモデル写真");
+}
+
 const renderers = read("scripts/renderers.js");
 if (!renderers.includes('loading="${loading}"') || !renderers.includes("load-more-assets")) {
   errors.push("画像遅延ロードまたは追加読み込みの実装が見つかりません。");
@@ -45,4 +51,4 @@ if (errors.length) {
   process.exit(1);
 }
 
-console.log(`Smoke test passed: ${scriptFiles.length} scripts, ${assetFiles.length} assets checked.`);
+console.log(`Smoke test passed: ${scriptFiles.length} scripts, ${assetFiles.length} assets, ${modelPhotoFiles.length} model photos checked.`);

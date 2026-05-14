@@ -10,6 +10,10 @@
     drag: null, last: null, aid: 0, body: true
   };
 
+  function encodedAssetUrl(base, file) {
+    return encodeURI(`${base || ""}${file || ""}`);
+  }
+
   /* ── Texture ── */
   function makeTex(pal, edit, prop) {
     const S = 1024, d = Number(edit.density||prop.density||46);
@@ -180,6 +184,40 @@
     return g;
   }
 
+  function makePhotoModel(model, config) {
+    const key = model.mannequin === "female" ? "female" : "male";
+    const photo = config?.modelPhotos?.[key];
+    if (!photo?.file) return null;
+
+    const group = new THREE.Group();
+    const width = 2.48;
+    const height = 3.72;
+    const material = new THREE.MeshBasicMaterial({
+      color: "#ffffff",
+      transparent: true,
+      opacity: .98,
+      side: THREE.DoubleSide
+    });
+    const plane = new THREE.Mesh(new THREE.PlaneGeometry(width, height), material);
+    plane.position.set(0, 1.74, -0.18);
+    plane.userData.modelPhoto = key;
+    group.add(plane);
+
+    new THREE.TextureLoader().load(
+      encodedAssetUrl(config.modelPhotoBaseUrl, photo.file),
+      (texture) => {
+        if (THREE.SRGBColorSpace) texture.colorSpace = THREE.SRGBColorSpace;
+        texture.anisotropy = 8;
+        material.map = texture;
+        material.needsUpdate = true;
+      },
+      undefined,
+      () => console.warn(`[3D] model photo failed: ${photo.file}`)
+    );
+
+    return group;
+  }
+
   /* ── Shirt that fits the body ── */
   function makeShirt(pal, edit, prop, ss) {
     const g=new THREE.Group(), S=ss;
@@ -322,7 +360,9 @@
       const pal = palettes[edit.palette] || palettes[proposal.palette];
       const bs = {slim:.88,normal:1,strong:1.14}[model.body] || 1;
       const ss = (fit && fit.selected && fit.selected.chest ? fit.selected.chest : 110) / 110;
-      V.mannequin = makeBody(bs); V.mannequin.visible = V.body; V.root.add(V.mannequin);
+      V.mannequin = makePhotoModel(model, payload.config) || makeBody(bs);
+      V.mannequin.visible = V.body;
+      V.root.add(V.mannequin);
       V.shirt = makeShirt(pal,edit,proposal,ss,payload.assets); V.root.add(V.shirt);
       if(fit) V.root.add(makeGuides(fit));
       const va = {front:0,side:Math.PI/2,back:Math.PI};
