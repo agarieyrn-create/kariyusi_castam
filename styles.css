@@ -907,6 +907,7 @@ textarea {
   content: "";
   position: absolute;
   inset: auto 9% 8% 9%;
+  z-index: 3;
   height: 1px;
   background: linear-gradient(90deg, transparent, rgba(22, 114, 125, .45), transparent);
   pointer-events: none;
@@ -935,9 +936,23 @@ textarea {
 }
 
 .tryon-canvas {
+  position: relative;
+  z-index: 2;
   display: block;
   width: 100%;
   height: 100%;
+}
+
+.model-photo-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  opacity: .88;
+  pointer-events: none;
 }
 
 .tryon-overlay {

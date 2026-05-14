@@ -14,6 +14,32 @@
     return encodeURI(`${base || ""}${file || ""}`);
   }
 
+  function currentPhoto(model, config) {
+    const key = model?.mannequin === "female" ? "female" : "male";
+    const photo = config?.modelPhotos?.[key];
+    return photo?.file ? { key, photo } : null;
+  }
+
+  function syncPhotoLayer(container, model, config) {
+    const selected = currentPhoto(model, config);
+    let img = container.querySelector(".model-photo-layer");
+    if (!selected) {
+      if (img) img.remove();
+      return;
+    }
+    if (!img) {
+      img = document.createElement("img");
+      img.className = "model-photo-layer";
+      img.alt = "人物モデル";
+      img.decoding = "async";
+      container.prepend(img);
+    }
+    img.src = encodedAssetUrl(config.modelPhotoBaseUrl, selected.photo.file);
+    img.alt = `${selected.photo.label || selected.key}モデル`;
+    img.dataset.mannequin = selected.key;
+    img.hidden = !V.body;
+  }
+
   /* ── Texture ── */
   function makeTex(pal, edit, prop) {
     const S = 1024, d = Number(edit.density||prop.density||46);
@@ -114,10 +140,10 @@
     if(V.renderer){cancelAnimationFrame(V.aid);V.renderer.dispose();}
     V.canvas=cv;
     V.scene=new THREE.Scene();
-    V.scene.background=new THREE.Color("#e4efe8");
     V.camera=new THREE.PerspectiveCamera(34,1,.1,100);
     V.camera.position.set(0,2.2,V.zoom);
-    V.renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true,preserveDrawingBuffer:true});
+    V.renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true,preserveDrawingBuffer:true,alpha:true});
+    V.renderer.setClearColor(0x000000, 0);
     V.renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));
     if(THREE.SRGBColorSpace) V.renderer.outputColorSpace=THREE.SRGBColorSpace;
     V.renderer.shadowMap.enabled=true;
@@ -182,40 +208,6 @@
       ll.position.set(xo,.3,.02); ll.castShadow=true; g.add(ll);
     });
     return g;
-  }
-
-  function makePhotoModel(model, config) {
-    const key = model.mannequin === "female" ? "female" : "male";
-    const photo = config?.modelPhotos?.[key];
-    if (!photo?.file) return null;
-
-    const group = new THREE.Group();
-    const width = 2.48;
-    const height = 3.72;
-    const material = new THREE.MeshBasicMaterial({
-      color: "#ffffff",
-      transparent: true,
-      opacity: .98,
-      side: THREE.DoubleSide
-    });
-    const plane = new THREE.Mesh(new THREE.PlaneGeometry(width, height), material);
-    plane.position.set(0, 1.74, -0.18);
-    plane.userData.modelPhoto = key;
-    group.add(plane);
-
-    new THREE.TextureLoader().load(
-      encodedAssetUrl(config.modelPhotoBaseUrl, photo.file),
-      (texture) => {
-        if (THREE.SRGBColorSpace) texture.colorSpace = THREE.SRGBColorSpace;
-        texture.anisotropy = 8;
-        material.map = texture;
-        material.needsUpdate = true;
-      },
-      undefined,
-      () => console.warn(`[3D] model photo failed: ${photo.file}`)
-    );
-
-    return group;
   }
 
   /* ── Shirt that fits the body ── */
@@ -345,6 +337,7 @@
         cv.style.cssText="width:100%;height:100%;display:block;cursor:grab;touch-action:none;border-radius:12px;";
         ct.innerHTML=""; ct.appendChild(cv);
       }
+      syncPhotoLayer(ct, payload.model, payload.config);
       initScene(cv);
       // clear
       while(V.root.children.length){
@@ -360,7 +353,7 @@
       const pal = palettes[edit.palette] || palettes[proposal.palette];
       const bs = {slim:.88,normal:1,strong:1.14}[model.body] || 1;
       const ss = (fit && fit.selected && fit.selected.chest ? fit.selected.chest : 110) / 110;
-      V.mannequin = makePhotoModel(model, payload.config) || makeBody(bs);
+      V.mannequin = currentPhoto(model, payload.config) ? new THREE.Group() : makeBody(bs);
       V.mannequin.visible = V.body;
       V.root.add(V.mannequin);
       V.shirt = makeShirt(pal,edit,proposal,ss,payload.assets); V.root.add(V.shirt);
@@ -391,6 +384,6 @@
 
   window.addEventListener("kariyushi:render3d",e=>rebuild(e.detail));
   window.addEventListener("resize",resize);
-  window.KariyushiThreeViewer={rebuild, toggleBody(){V.body=!V.body;if(V.mannequin)V.mannequin.visible=V.body;}};
+  window.KariyushiThreeViewer={rebuild, toggleBody(){V.body=!V.body;if(V.mannequin)V.mannequin.visible=V.body;document.querySelectorAll(".model-photo-layer").forEach((img)=>{img.hidden=!V.body;});}};
   if(window.KariyushiLatest3D)rebuild(window.KariyushiLatest3D);
 })();
