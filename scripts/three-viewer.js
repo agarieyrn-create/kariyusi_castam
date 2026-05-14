@@ -113,7 +113,7 @@
     V.scene.background=new THREE.Color("#e4efe8");
     V.camera=new THREE.PerspectiveCamera(34,1,.1,100);
     V.camera.position.set(0,2.2,V.zoom);
-    V.renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true});
+    V.renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true,preserveDrawingBuffer:true});
     V.renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));
     if(THREE.SRGBColorSpace) V.renderer.outputColorSpace=THREE.SRGBColorSpace;
     V.renderer.shadowMap.enabled=true;
@@ -125,8 +125,12 @@
     const k=new THREE.DirectionalLight("#fffef5",2.2);
     k.position.set(3,6,4); k.castShadow=true; k.shadow.mapSize.set(1024,1024);
     V.scene.add(k);
-    V.scene.add(Object.assign(new THREE.DirectionalLight("#d4f0ed",.9),{position:new THREE.Vector3(-4,3,2)}));
-    V.scene.add(Object.assign(new THREE.DirectionalLight("#ffecd2",.5),{position:new THREE.Vector3(0,2,-5)}));
+    const fillLight = new THREE.DirectionalLight("#d4f0ed", .9);
+    fillLight.position.set(-4, 3, 2);
+    V.scene.add(fillLight);
+    const rimLight = new THREE.DirectionalLight("#ffecd2", .5);
+    rimLight.position.set(0, 2, -5);
+    V.scene.add(rimLight);
     // floor
     const fl=new THREE.Mesh(new THREE.CircleGeometry(2.2,80),new THREE.MeshStandardMaterial({color:"#d5e2dc",roughness:.9}));
     fl.rotation.x=-Math.PI/2; fl.position.y=-.02; fl.receiveShadow=true; V.scene.add(fl);
@@ -298,6 +302,7 @@
       if(!ct){console.warn("[3D] #modelPreview missing");return;}
       let cv=ct.querySelector("canvas.tryon-canvas");
       if(!cv){
+        ct.classList.add("three-tryon");
         cv=document.createElement("canvas"); cv.className="tryon-canvas";
         cv.style.cssText="width:100%;height:100%;display:block;cursor:grab;touch-action:none;border-radius:12px;";
         ct.innerHTML=""; ct.appendChild(cv);

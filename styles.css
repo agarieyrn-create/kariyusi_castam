@@ -104,6 +104,7 @@ textarea {
 }
 
 .step-link {
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -111,6 +112,7 @@ textarea {
   border-radius: 20px;
   color: var(--muted);
   font-weight: 700;
+  white-space: nowrap;
   transition: all .2s;
 }
 
@@ -139,6 +141,7 @@ textarea {
 }
 
 .step-divider {
+  flex: 0 0 auto;
   width: 12px;
   height: 1px;
   background: var(--line);
@@ -1172,8 +1175,13 @@ textarea {
 
   .main-preview,
   .preview-shell,
-  .model-preview {
+  .model-preview,
+  .three-tryon {
     min-height: 430px;
+  }
+
+  .three-tryon {
+    height: 430px;
   }
 
   .model-svg {
