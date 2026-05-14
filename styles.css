@@ -622,6 +622,33 @@ textarea {
   line-height: 1.35;
 }
 
+.load-more-assets {
+  min-height: 180px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 6px;
+  padding: 18px;
+  border: 1px dashed rgba(22, 114, 125, .36);
+  border-radius: 8px;
+  color: var(--teal);
+  background: #f6fbf9;
+  cursor: pointer;
+  text-align: center;
+  font: inherit;
+}
+
+.load-more-assets strong {
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.load-more-assets span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
 .editor-layout,
 .model-layout,
 .spec-layout {

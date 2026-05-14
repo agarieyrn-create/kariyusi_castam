@@ -10,7 +10,12 @@
   }
 
   function writeJson(key, value) {
-    localStorage.setItem(key, JSON.stringify(value));
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+      return true;
+    } catch (_error) {
+      return false;
+    }
   }
 
   function uid(prefix) {
@@ -59,6 +64,7 @@
       };
       const sessions = readJson(this.config.storageKeys.sessions, []);
       sessions.unshift(session);
+      sessions.length = Math.min(sessions.length, this.config.storageLimits?.sessions || 20);
       writeJson(this.config.storageKeys.sessions, sessions);
       writeJson(this.config.storageKeys.selectedSession, session);
       return session;
@@ -108,7 +114,10 @@
       };
       const inquiries = readJson(this.config.storageKeys.inquiries, []);
       inquiries.unshift(inquiry);
-      writeJson(this.config.storageKeys.inquiries, inquiries);
+      inquiries.length = Math.min(inquiries.length, this.config.storageLimits?.inquiries || 50);
+      if (!writeJson(this.config.storageKeys.inquiries, inquiries)) {
+        throw new Error("問い合わせ内容の保存容量が不足しています。古い保存データを削除してから再度お試しください。");
+      }
       return inquiry;
     }
   }

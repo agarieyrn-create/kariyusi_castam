@@ -13,7 +13,8 @@
     selectedId: "",
     edit: { ...config.defaultEdit },
     model: { ...config.defaultModel },
-    estimate: null
+    estimate: null,
+    assetLimit: config.performance?.initialAssetLimit || 24
   };
 
   function selectedProposal() {
@@ -124,7 +125,10 @@
       config,
       state.catalog.assets
     );
-    renderers.renderAssets(document.getElementById("assetGallery"), state.catalog.assets, config, state.edit.assetId);
+    renderers.renderAssets(document.getElementById("assetGallery"), state.catalog.assets, config, state.edit.assetId, {
+      limit: state.assetLimit,
+      pageSize: config.performance?.assetPageSize || 24
+    });
     renderers.renderEditor(document.getElementById("editorPreview"), proposal, state.catalog.palettes, state.edit, state.catalog.assets, config);
     renderers.renderFitReport(document.getElementById("fitReport"), state.model, fit);
     renderers.renderDesignNotes(document.getElementById("designNotes"), proposal, state.edit, state.catalog.assets);
@@ -204,6 +208,12 @@
     });
     document.getElementById("assetGallery").addEventListener("click", (event) => {
       const button = event.target.closest(".asset-card");
+      const loadMore = event.target.closest(".load-more-assets");
+      if (loadMore) {
+        state.assetLimit = Number(loadMore.dataset.nextLimit) || state.assetLimit + 24;
+        renderAll();
+        return;
+      }
       if (!button) return;
       state.edit.assetId = button.dataset.id;
       renderAll();
@@ -312,20 +322,26 @@
     document.getElementById("contactForm").addEventListener("submit", async (event) => {
       event.preventDefault();
       const form = event.currentTarget;
-      const inquiry = await api.saveInquiry({
-        sessionId: state.session?.id,
-        proposal: selectedProposal(),
-        brief: state.brief,
-        edit: state.edit,
-        model: state.model,
-        estimate: state.estimate,
-        customer: {
-          name: form.querySelector('input[type="text"]').value,
-          email: form.querySelector('input[type="email"]').value,
-          note: form.querySelector("textarea").value
-        }
-      });
-      document.getElementById("contactStatus").textContent = `保存しました。管理用ID: ${inquiry.id}`;
+      const status = document.getElementById("contactStatus");
+      const cleanText = (value, max = 500) => String(value || "").trim().replace(/\s+/g, " ").slice(0, max);
+      try {
+        const inquiry = await api.saveInquiry({
+          sessionId: state.session?.id,
+          proposal: selectedProposal(),
+          brief: state.brief,
+          edit: state.edit,
+          model: state.model,
+          estimate: state.estimate,
+          customer: {
+            name: cleanText(form.querySelector('input[type="text"]').value, 80),
+            email: cleanText(form.querySelector('input[type="email"]').value, 160).toLowerCase(),
+            note: cleanText(form.querySelector("textarea").value, 800)
+          }
+        });
+        status.textContent = `保存しました。管理用ID: ${inquiry.id}`;
+      } catch (error) {
+        status.textContent = error.message || "保存に失敗しました。";
+      }
     });
   }
 
@@ -366,9 +382,17 @@
     });
 
     // Logo upload
-    document.getElementById("logoUpload")?.addEventListener("change", (e) => {
+    document.getElementById("logoUpload")?.addEventListener("change", async (e) => {
       const file = e.target.files[0];
-      if (file) editor.addLogo(file);
+      if (!file) return;
+      try {
+        await editor.addLogo(file);
+        showStudioStatus("ロゴ画像を追加しました");
+      } catch (error) {
+        showStudioStatus(error.message || "ロゴ画像を追加できませんでした");
+      } finally {
+        e.target.value = "";
+      }
     });
 
     // Text add

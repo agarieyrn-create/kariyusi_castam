@@ -9,6 +9,19 @@
       inquiries: "kariyushi-design-inquiries",
       selectedSession: "kariyushi-design-selected-session"
     },
+    storageLimits: {
+      sessions: 20,
+      inquiries: 50
+    },
+    upload: {
+      allowedLogoTypes: ["image/png", "image/jpeg", "image/webp"],
+      maxLogoBytes: 2 * 1024 * 1024,
+      maxLogoPixels: 16 * 1000 * 1000
+    },
+    performance: {
+      initialAssetLimit: 24,
+      assetPageSize: 24
+    },
     defaultBrief: {
       scene: "ホテル・店舗制服",
       mood: "上品",

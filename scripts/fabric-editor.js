@@ -3,6 +3,46 @@
 
   let fabricCanvas = null;
   let onDesignChange = null;
+  const DEFAULT_UPLOAD_RULES = {
+    allowedLogoTypes: ["image/png", "image/jpeg", "image/webp"],
+    maxLogoBytes: 2 * 1024 * 1024,
+    maxLogoPixels: 16 * 1000 * 1000
+  };
+
+  function uploadRules() {
+    return window.KariyushiConfig?.upload || DEFAULT_UPLOAD_RULES;
+  }
+
+  function validateLogoFile(file) {
+    const rules = uploadRules();
+    if (!file) throw new Error("画像ファイルを選択してください。");
+    if (!rules.allowedLogoTypes.includes(file.type)) {
+      throw new Error("ロゴ画像は PNG / JPEG / WebP のみ対応しています。");
+    }
+    if (file.size > rules.maxLogoBytes) {
+      throw new Error(`ロゴ画像は ${Math.round(rules.maxLogoBytes / 1024 / 1024)}MB 以下にしてください。`);
+    }
+  }
+
+  async function validateImageDimensions(dataUrl) {
+    const rules = uploadRules();
+    const image = new Image();
+    image.decoding = "async";
+    image.src = dataUrl;
+    await image.decode();
+    if (image.naturalWidth * image.naturalHeight > rules.maxLogoPixels) {
+      throw new Error("画像サイズが大きすぎます。縦横を小さくしてから再度選択してください。");
+    }
+  }
+
+  function readAsDataUrl(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(new Error("画像ファイルを読み込めませんでした。"));
+      reader.readAsDataURL(file);
+    });
+  }
 
   function init(canvasId, onChange) {
     const el = document.getElementById(canvasId);
@@ -27,11 +67,19 @@
   }
 
   /* ── Logo Upload ── */
-  function addLogo(file) {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        fabric.Image.fromURL(e.target.result, (img) => {
+  async function addLogo(file) {
+    if (!fabricCanvas) throw new Error("編集キャンバスを初期化できていません。");
+    validateLogoFile(file);
+    const dataUrl = await readAsDataUrl(file);
+    await validateImageDimensions(dataUrl);
+    return new Promise((resolve, reject) => {
+      fabric.Image.fromURL(
+        dataUrl,
+        (img) => {
+          if (!img || !img.width || !img.height) {
+            reject(new Error("画像データを確認できませんでした。"));
+            return;
+          }
           const maxSize = 180;
           const scale = Math.min(maxSize / img.width, maxSize / img.height, 1);
           img.set({
@@ -49,9 +97,9 @@
           fabricCanvas.setActiveObject(img);
           fabricCanvas.renderAll();
           resolve(img);
-        });
-      };
-      reader.readAsDataURL(file);
+        },
+        { crossOrigin: "anonymous" }
+      );
     });
   }
 

@@ -18,6 +18,12 @@
     return encodeURI(`${config.assetBaseUrl}${asset.file}`);
   }
 
+  function imageAttrs(asset, config, options = {}) {
+    const loading = options.eager ? "eager" : "lazy";
+    const priority = options.eager ? "high" : "low";
+    return `src="${esc(assetUrl(config, asset))}" alt="${esc(asset.title)}" loading="${loading}" decoding="async" fetchpriority="${priority}"`;
+  }
+
   function findAsset(assets, id) {
     return assets?.find((item) => item.id === id) || null;
   }
@@ -149,7 +155,7 @@
         <article class="proposal-card ${proposal.id === selectedId ? "selected" : ""}">
           <div class="proposal-visual">
             <div class="proposal-shirt">${shirtSvg(proposal, palettes, proposal, { assets, config })}</div>
-            ${asset ? `<img src="${esc(assetUrl(config, asset))}" alt="${esc(asset.title)}">` : ""}
+            ${asset ? `<img ${imageAttrs(asset, config)} width="104" height="240">` : ""}
           </div>
           <div class="proposal-copy">
             <h3>${esc(proposal.title)}</h3>
@@ -166,15 +172,25 @@
     }).join("");
   }
 
-  function renderAssets(target, assets, config, selectedAssetId) {
-    target.innerHTML = assets.map((asset) => `
+  function renderAssets(target, assets, config, selectedAssetId, options = {}) {
+    const limit = Math.max(1, Number(options.limit) || assets.length);
+    const selectedAsset = findAsset(assets, selectedAssetId);
+    const visible = assets.slice(0, limit);
+    if (selectedAsset && !visible.some((asset) => asset.id === selectedAsset.id)) visible.push(selectedAsset);
+    const hiddenCount = Math.max(0, assets.length - limit);
+    target.innerHTML = visible.map((asset) => `
       <button class="asset-card ${asset.id === selectedAssetId ? "selected" : ""}" type="button" data-id="${esc(asset.id)}" data-type="${esc(asset.type)}">
-        <img src="${esc(assetUrl(config, asset))}" alt="${esc(asset.title)}">
+        <img ${imageAttrs(asset, config)} width="180" height="180">
         <b>${asset.type === "motif" ? "柄素材" : "参考写真"}</b>
         <span>${esc(asset.title)}</span>
         <small>${asset.tags.map(esc).join(" / ")}</small>
       </button>
-    `).join("");
+    `).join("") + (hiddenCount > 0 ? `
+      <button class="load-more-assets" type="button" data-next-limit="${limit + (options.pageSize || 24)}">
+        <strong>さらに表示</strong>
+        <span>残り ${hiddenCount} 点の素材を読み込む</span>
+      </button>
+    ` : "");
   }
 
   function renderEditor(target, proposal, palettes, edit, assets, config) {
@@ -183,7 +199,7 @@
       <div class="editor-canvas">
         <div class="shirt-front">${shirtSvg(proposal, palettes, edit, { assets, config })}</div>
         <div class="reference-tile">
-          ${asset ? `<img src="${esc(assetUrl(config, asset))}" alt="${esc(asset.title)}">` : ""}
+          ${asset ? `<img ${imageAttrs(asset, config, { eager: true })} width="190" height="253">` : ""}
           <span>反映中の参考画像</span>
         </div>
       </div>`;

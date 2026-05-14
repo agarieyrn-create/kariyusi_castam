@@ -2,6 +2,8 @@
   "use strict";
 
   const STORAGE_KEY = "kariyushi-saved-designs";
+  const MAX_SAVED_DESIGNS = 30;
+  const MAX_SHARE_PAYLOAD_BYTES = 120 * 1024;
 
   function uid() {
     return `design_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
@@ -16,8 +18,13 @@
       ...designData
     };
     designs.unshift(entry);
-    if (designs.length > 50) designs.length = 50;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(designs));
+    if (designs.length > MAX_SAVED_DESIGNS) designs.length = MAX_SAVED_DESIGNS;
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(designs));
+    } catch (_error) {
+      designs.pop();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(designs));
+    }
     return entry;
   }
 
@@ -38,7 +45,9 @@
   /* ── Generate Share URL ── */
   function generateShareUrl(designData) {
     try {
-      const compressed = btoa(unescape(encodeURIComponent(JSON.stringify(designData))));
+      const payload = JSON.stringify({ version: 1, ...designData });
+      if (new Blob([payload]).size > MAX_SHARE_PAYLOAD_BYTES) return null;
+      const compressed = btoa(unescape(encodeURIComponent(payload)));
       const url = new URL(window.location.href.split("?")[0]);
       url.searchParams.set("design", compressed);
       return url.toString();
