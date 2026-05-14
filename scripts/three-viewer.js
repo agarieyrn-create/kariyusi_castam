@@ -155,49 +155,126 @@
     const female = model?.mannequin === "female";
     return {
       skin: female ? "#d8c9b8" : "#c89570",
+      pants: female ? "#c3b79e" : "#b9a887",
+      shoes: female ? "#d8d2c8" : "#f4f2ea",
       headScale: female ? [0.78, 1.08, 0.78] : [0.88, 1.06, 0.84],
       neckY: female ? 2.7 : 2.72,
-      armX: (female ? .52 : .58) * bs,
-      armY: female ? 1.68 : 1.62,
-      armLength: female ? .5 : .46,
-      armRadius: female ? .052 : .065,
-      handX: (female ? .55 : .6) * bs,
-      legX: female ? .13 : .16,
+      shoulderX: (female ? .48 : .58) * bs,
+      elbowX: (female ? .88 : 1.02) * bs,
+      wristX: (female ? 1.24 : 1.42) * bs,
+      shoulderY: female ? 2.4 : 2.38,
+      elbowY: female ? 2.22 : 2.16,
+      wristY: female ? 2.05 : 1.92,
+      upperArmRadius: female ? .048 : .062,
+      forearmRadius: female ? .043 : .055,
+      legX: female ? .12 : .16,
       upperLegRadius: female ? .082 : .1,
       lowerLegRadius: female ? .064 : .075,
-      hipWidth: female ? .46 : .38
+      hipWidth: female ? .46 : .38,
+      footScale: female ? [.18, .055, .34] : [.22, .07, .4],
+      platform: female ? [1.0, .08, .62] : [1.16, .1, .72]
     };
+  }
+
+  function capsuleBetween(start, end, radius, material) {
+    const direction = new THREE.Vector3().subVectors(end, start);
+    const distance = direction.length();
+    const mesh = new THREE.Mesh(new THREE.CapsuleGeometry(radius, Math.max(.01, distance - radius * 2), 8, 18), material);
+    mesh.position.copy(start).add(end).multiplyScalar(.5);
+    mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.normalize());
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    return mesh;
+  }
+
+  function cylinderBetween(start, end, radiusTop, radiusBottom, material, segments = 32) {
+    const direction = new THREE.Vector3().subVectors(end, start);
+    const distance = direction.length();
+    const mesh = new THREE.Mesh(new THREE.CylinderGeometry(radiusTop, radiusBottom, distance, segments, 1, true), material);
+    mesh.position.copy(start).add(end).multiplyScalar(.5);
+    mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.normalize());
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    return mesh;
   }
 
   function makeBody(model, bs) {
     const profile = bodyProfile(model, bs);
     const g=new THREE.Group();
     const sk=new THREE.MeshStandardMaterial({color:profile.skin,roughness:.62,metalness:.01});
+    const pantsMat=new THREE.MeshStandardMaterial({color:profile.pants,roughness:.74,metalness:.01});
+    const shoeMat=new THREE.MeshStandardMaterial({color:profile.shoes,roughness:.55,metalness:.02});
+    const platformMat=new THREE.MeshStandardMaterial({color:"#1b1b1b",roughness:.5,metalness:.08});
+    const seamMat=new THREE.MeshStandardMaterial({color:"#756957",roughness:.7});
     // head
     const hd=new THREE.Mesh(new THREE.SphereGeometry(.22,32,24),sk);
     hd.position.y=2.92; hd.scale.set(...profile.headScale); hd.castShadow=true; g.add(hd);
     // neck
     const nk=new THREE.Mesh(new THREE.CylinderGeometry(.09,.11,.18,16),sk);
     nk.position.y=profile.neckY; nk.castShadow=true; g.add(nk);
-    // torso (BODY under shirt — only lower arms & legs visible)
-    // upper arms visible below sleeve
+    // arms are posed like the reference mannequin photos.
     [-1,1].forEach(s=>{
-      // forearm (below sleeve)
-      const fa=new THREE.Mesh(new THREE.CapsuleGeometry(profile.armRadius,profile.armLength,8,16),sk);
-      fa.position.set(s*profile.armX,profile.armY,.04); fa.rotation.z=s*.1; fa.castShadow=true; g.add(fa);
-      // hand
-      const h=new THREE.Mesh(new THREE.SphereGeometry(.055,12,10),sk);
-      h.position.set(s*profile.handX,1.32,.06); h.scale.set(1,1.2,.6); g.add(h);
+      const shoulder = new THREE.Vector3(s * profile.shoulderX, profile.shoulderY, .03);
+      const elbow = new THREE.Vector3(s * profile.elbowX, profile.elbowY, .04);
+      const wrist = new THREE.Vector3(s * profile.wristX, profile.wristY, .06);
+      g.add(capsuleBetween(shoulder, elbow, profile.upperArmRadius, sk));
+      g.add(capsuleBetween(elbow, wrist, profile.forearmRadius, sk));
+
+      const palm = new THREE.Mesh(new THREE.SphereGeometry(.07, 18, 12), sk);
+      palm.position.copy(wrist).add(new THREE.Vector3(s * .07, -.015, .015));
+      palm.scale.set(1.25, .62, .32);
+      palm.rotation.z = s * -.18;
+      palm.castShadow = true;
+      g.add(palm);
+
+      const thumb = capsuleBetween(
+        wrist.clone().add(new THREE.Vector3(s * .045, .005, .005)),
+        wrist.clone().add(new THREE.Vector3(s * .13, .045, .035)),
+        .012,
+        sk
+      );
+      g.add(thumb);
+      for (let i = 0; i < 4; i++) {
+        const z = -.035 + i * .023;
+        g.add(capsuleBetween(
+          wrist.clone().add(new THREE.Vector3(s * .09, -.035, z)),
+          wrist.clone().add(new THREE.Vector3(s * (.18 + i * .01), -.045, z + .003)),
+          .01,
+          sk
+        ));
+      }
     });
-    // legs
+    // trousers, shoes, and display base from the reference photos.
     [-profile.legX,profile.legX].forEach(xo=>{
-      const ul=new THREE.Mesh(new THREE.CapsuleGeometry(profile.upperLegRadius,.56,8,16),sk);
-      ul.position.set(xo,.88,0); ul.castShadow=true; g.add(ul);
-      const ll=new THREE.Mesh(new THREE.CapsuleGeometry(profile.lowerLegRadius,.5,8,16),sk);
-      ll.position.set(xo,.3,.02); ll.castShadow=true; g.add(ll);
+      const thighTop = new THREE.Vector3(xo, 1.28, 0);
+      const knee = new THREE.Vector3(xo * 1.04, .76, .01);
+      const ankle = new THREE.Vector3(xo * 1.04, .2, .025);
+      g.add(capsuleBetween(thighTop, knee, profile.upperLegRadius, pantsMat));
+      g.add(capsuleBetween(knee, ankle, profile.lowerLegRadius, pantsMat));
+      const crease = new THREE.Mesh(new THREE.BoxGeometry(.01, .8, .006), seamMat);
+      crease.position.set(xo * 1.04, .75, .085);
+      crease.castShadow = false;
+      g.add(crease);
+
+      const foot = new THREE.Mesh(new THREE.SphereGeometry(.12, 20, 12), shoeMat);
+      foot.position.set(xo * 1.06, .06, .16);
+      foot.scale.set(...profile.footScale);
+      foot.castShadow = true;
+      g.add(foot);
     });
     const hip=new THREE.Mesh(new THREE.SphereGeometry(.22,24,16),sk);
-    hip.position.y=1.14; hip.scale.set(profile.hipWidth, .18, .42); hip.castShadow=true; g.add(hip);
+    hip.position.y=1.22; hip.scale.set(profile.hipWidth, .18, .42); hip.castShadow=true; g.add(hip);
+    const belt = new THREE.Mesh(new THREE.TorusGeometry(profile.hipWidth * .22, .012, 8, 64), seamMat);
+    belt.position.y = 1.38;
+    belt.scale.z = .42;
+    belt.rotation.x = Math.PI / 2;
+    g.add(belt);
+
+    const platform = new THREE.Mesh(new THREE.BoxGeometry(...profile.platform), platformMat);
+    platform.position.y = -.055;
+    platform.receiveShadow = true;
+    platform.castShadow = true;
+    g.add(platform);
     return g;
   }
 
@@ -247,16 +324,15 @@
 
     // Sleeves — covering upper arms
     [-1,1].forEach(side=>{
-      const slG=new THREE.CylinderGeometry(.08,.18,.48,32,1,true);
-      const sl=new THREE.Mesh(slG,fm);
-      sl.position.set(side*.54*S*shoulderScale, 2.16, .02);
-      sl.rotation.z=side*(Math.PI/2-.4);
-      sl.rotation.y=side*.15;
-      sl.castShadow=true; g.add(sl);
+      const start = new THREE.Vector3(side*.4*S*shoulderScale, 2.38, .035);
+      const end = new THREE.Vector3(side*.72*S*shoulderScale, 2.18, .055);
+      const sl = cylinderBetween(start, end, .105, .17, fm, 32);
+      g.add(sl);
       // sleeve hem
-      const sh=new THREE.Mesh(new THREE.TorusGeometry(.18,.006,8,40),seam);
-      sh.position.set(side*.64*S*shoulderScale, 1.92, .04);
-      sh.rotation.z=sl.rotation.z;
+      const sh=new THREE.Mesh(new THREE.TorusGeometry(.17,.006,8,40),seam);
+      sh.position.copy(end);
+      sh.quaternion.copy(sl.quaternion);
+      sh.rotation.z += side * Math.PI / 2;
       g.add(sh);
     });
 
