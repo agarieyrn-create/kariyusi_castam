@@ -937,22 +937,10 @@ textarea {
 
 .tryon-canvas {
   position: relative;
-  z-index: 2;
+  z-index: 1;
   display: block;
   width: 100%;
   height: 100%;
-}
-
-.model-photo-layer {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  object-position: center;
-  opacity: .88;
-  pointer-events: none;
 }
 
 .tryon-overlay {

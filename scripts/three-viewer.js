@@ -10,36 +10,6 @@
     drag: null, last: null, aid: 0, body: true
   };
 
-  function encodedAssetUrl(base, file) {
-    return encodeURI(`${base || ""}${file || ""}`);
-  }
-
-  function currentPhoto(model, config) {
-    const key = model?.mannequin === "female" ? "female" : "male";
-    const photo = config?.modelPhotos?.[key];
-    return photo?.file ? { key, photo } : null;
-  }
-
-  function syncPhotoLayer(container, model, config) {
-    const selected = currentPhoto(model, config);
-    let img = container.querySelector(".model-photo-layer");
-    if (!selected) {
-      if (img) img.remove();
-      return;
-    }
-    if (!img) {
-      img = document.createElement("img");
-      img.className = "model-photo-layer";
-      img.alt = "人物モデル";
-      img.decoding = "async";
-      container.prepend(img);
-    }
-    img.src = encodedAssetUrl(config.modelPhotoBaseUrl, selected.photo.file);
-    img.alt = `${selected.photo.label || selected.key}モデル`;
-    img.dataset.mannequin = selected.key;
-    img.hidden = !V.body;
-  }
-
   /* ── Texture ── */
   function makeTex(pal, edit, prop) {
     const S = 1024, d = Number(edit.density||prop.density||46);
@@ -140,10 +110,10 @@
     if(V.renderer){cancelAnimationFrame(V.aid);V.renderer.dispose();}
     V.canvas=cv;
     V.scene=new THREE.Scene();
+    V.scene.background=new THREE.Color("#e4efe8");
     V.camera=new THREE.PerspectiveCamera(34,1,.1,100);
     V.camera.position.set(0,2.2,V.zoom);
-    V.renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true,preserveDrawingBuffer:true,alpha:true});
-    V.renderer.setClearColor(0x000000, 0);
+    V.renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true,preserveDrawingBuffer:true});
     V.renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));
     if(THREE.SRGBColorSpace) V.renderer.outputColorSpace=THREE.SRGBColorSpace;
     V.renderer.shadowMap.enabled=true;
@@ -181,38 +151,62 @@
   }
 
   /* ── Mannequin ── */
-  function makeBody(bs) {
+  function bodyProfile(model, bs) {
+    const female = model?.mannequin === "female";
+    return {
+      skin: female ? "#d8c9b8" : "#c89570",
+      headScale: female ? [0.78, 1.08, 0.78] : [0.88, 1.06, 0.84],
+      neckY: female ? 2.7 : 2.72,
+      armX: (female ? .52 : .58) * bs,
+      armY: female ? 1.68 : 1.62,
+      armLength: female ? .5 : .46,
+      armRadius: female ? .052 : .065,
+      handX: (female ? .55 : .6) * bs,
+      legX: female ? .13 : .16,
+      upperLegRadius: female ? .082 : .1,
+      lowerLegRadius: female ? .064 : .075,
+      hipWidth: female ? .46 : .38
+    };
+  }
+
+  function makeBody(model, bs) {
+    const profile = bodyProfile(model, bs);
     const g=new THREE.Group();
-    const sk=new THREE.MeshStandardMaterial({color:"#c89570",roughness:.62,metalness:.01});
+    const sk=new THREE.MeshStandardMaterial({color:profile.skin,roughness:.62,metalness:.01});
     // head
     const hd=new THREE.Mesh(new THREE.SphereGeometry(.22,32,24),sk);
-    hd.position.y=2.92; hd.scale.set(.88,1.06,.84); hd.castShadow=true; g.add(hd);
+    hd.position.y=2.92; hd.scale.set(...profile.headScale); hd.castShadow=true; g.add(hd);
     // neck
     const nk=new THREE.Mesh(new THREE.CylinderGeometry(.09,.11,.18,16),sk);
-    nk.position.y=2.72; nk.castShadow=true; g.add(nk);
+    nk.position.y=profile.neckY; nk.castShadow=true; g.add(nk);
     // torso (BODY under shirt — only lower arms & legs visible)
     // upper arms visible below sleeve
     [-1,1].forEach(s=>{
       // forearm (below sleeve)
-      const fa=new THREE.Mesh(new THREE.CapsuleGeometry(.065,.46,8,16),sk);
-      fa.position.set(s*.58*bs,1.62,.04); fa.rotation.z=s*.1; fa.castShadow=true; g.add(fa);
+      const fa=new THREE.Mesh(new THREE.CapsuleGeometry(profile.armRadius,profile.armLength,8,16),sk);
+      fa.position.set(s*profile.armX,profile.armY,.04); fa.rotation.z=s*.1; fa.castShadow=true; g.add(fa);
       // hand
       const h=new THREE.Mesh(new THREE.SphereGeometry(.055,12,10),sk);
-      h.position.set(s*.6*bs,1.32,.06); h.scale.set(1,1.2,.6); g.add(h);
+      h.position.set(s*profile.handX,1.32,.06); h.scale.set(1,1.2,.6); g.add(h);
     });
     // legs
-    [-.16,.16].forEach(xo=>{
-      const ul=new THREE.Mesh(new THREE.CapsuleGeometry(.1,.56,8,16),sk);
+    [-profile.legX,profile.legX].forEach(xo=>{
+      const ul=new THREE.Mesh(new THREE.CapsuleGeometry(profile.upperLegRadius,.56,8,16),sk);
       ul.position.set(xo,.88,0); ul.castShadow=true; g.add(ul);
-      const ll=new THREE.Mesh(new THREE.CapsuleGeometry(.075,.5,8,16),sk);
+      const ll=new THREE.Mesh(new THREE.CapsuleGeometry(profile.lowerLegRadius,.5,8,16),sk);
       ll.position.set(xo,.3,.02); ll.castShadow=true; g.add(ll);
     });
+    const hip=new THREE.Mesh(new THREE.SphereGeometry(.22,24,16),sk);
+    hip.position.y=1.14; hip.scale.set(profile.hipWidth, .18, .42); hip.castShadow=true; g.add(hip);
     return g;
   }
 
   /* ── Shirt that fits the body ── */
-  function makeShirt(pal, edit, prop, ss) {
+  function makeShirt(pal, edit, prop, ss, model) {
     const g=new THREE.Group(), S=ss;
+    const female = model?.mannequin === "female";
+    const shoulderScale = female ? .9 : 1;
+    const chestScale = female ? .88 : 1;
     const tex=makeTex(pal,edit,prop);
     const fm=new THREE.MeshStandardMaterial({map:tex,roughness:.76,metalness:.01,side:THREE.DoubleSide});
     const seam=new THREE.MeshStandardMaterial({color:"#1d2e31",roughness:.7});
@@ -221,14 +215,14 @@
     // Using LatheGeometry that matches mannequin +offset for cloth thickness
     const off=.06; // cloth offset
     const prof=[
-      new THREE.Vector2(.40*S+off, 0),     // hem (bottom)
-      new THREE.Vector2(.39*S+off, .12),
-      new THREE.Vector2(.38*S+off, .28),    // lower waist
-      new THREE.Vector2(.40*S+off, .48),
-      new THREE.Vector2(.46*S+off, .68),    // mid torso
-      new THREE.Vector2(.50*S+off, .85),    // chest
-      new THREE.Vector2(.48*S+off, .98),
-      new THREE.Vector2(.42*S+off, 1.08),   // shoulder area
+      new THREE.Vector2((.40*S+off) * (female ? .88 : 1), 0),     // hem (bottom)
+      new THREE.Vector2((.39*S+off) * (female ? .84 : 1), .12),
+      new THREE.Vector2((.38*S+off) * (female ? .78 : 1), .28),    // lower waist
+      new THREE.Vector2((.40*S+off) * (female ? .82 : 1), .48),
+      new THREE.Vector2((.46*S+off) * chestScale, .68),    // mid torso
+      new THREE.Vector2((.50*S+off) * chestScale, .85),    // chest
+      new THREE.Vector2((.48*S+off) * shoulderScale, .98),
+      new THREE.Vector2((.42*S+off) * shoulderScale, 1.08),   // shoulder area
       new THREE.Vector2(.28*S+off, 1.18),   // neck opening
     ];
     const bodyGeo=new THREE.LatheGeometry(prof,64);
@@ -255,13 +249,13 @@
     [-1,1].forEach(side=>{
       const slG=new THREE.CylinderGeometry(.08,.18,.48,32,1,true);
       const sl=new THREE.Mesh(slG,fm);
-      sl.position.set(side*.54*S, 2.16, .02);
+      sl.position.set(side*.54*S*shoulderScale, 2.16, .02);
       sl.rotation.z=side*(Math.PI/2-.4);
       sl.rotation.y=side*.15;
       sl.castShadow=true; g.add(sl);
       // sleeve hem
       const sh=new THREE.Mesh(new THREE.TorusGeometry(.18,.006,8,40),seam);
-      sh.position.set(side*.64*S, 1.92, .04);
+      sh.position.set(side*.64*S*shoulderScale, 1.92, .04);
       sh.rotation.z=sl.rotation.z;
       g.add(sh);
     });
@@ -337,7 +331,6 @@
         cv.style.cssText="width:100%;height:100%;display:block;cursor:grab;touch-action:none;border-radius:12px;";
         ct.innerHTML=""; ct.appendChild(cv);
       }
-      syncPhotoLayer(ct, payload.model, payload.config);
       initScene(cv);
       // clear
       while(V.root.children.length){
@@ -353,10 +346,10 @@
       const pal = palettes[edit.palette] || palettes[proposal.palette];
       const bs = {slim:.88,normal:1,strong:1.14}[model.body] || 1;
       const ss = (fit && fit.selected && fit.selected.chest ? fit.selected.chest : 110) / 110;
-      V.mannequin = currentPhoto(model, payload.config) ? new THREE.Group() : makeBody(bs);
+      V.mannequin = makeBody(model, bs);
       V.mannequin.visible = V.body;
       V.root.add(V.mannequin);
-      V.shirt = makeShirt(pal,edit,proposal,ss,payload.assets); V.root.add(V.shirt);
+      V.shirt = makeShirt(pal,edit,proposal,ss,model); V.root.add(V.shirt);
       if(fit) V.root.add(makeGuides(fit));
       const va = {front:0,side:Math.PI/2,back:Math.PI};
       V.target = va[model.view] !== undefined ? va[model.view] : THREE.MathUtils.degToRad(((Number(model.rotation)||0)%360+360)%360);
@@ -384,6 +377,6 @@
 
   window.addEventListener("kariyushi:render3d",e=>rebuild(e.detail));
   window.addEventListener("resize",resize);
-  window.KariyushiThreeViewer={rebuild, toggleBody(){V.body=!V.body;if(V.mannequin)V.mannequin.visible=V.body;document.querySelectorAll(".model-photo-layer").forEach((img)=>{img.hidden=!V.body;});}};
+  window.KariyushiThreeViewer={rebuild, toggleBody(){V.body=!V.body;if(V.mannequin)V.mannequin.visible=V.body;}};
   if(window.KariyushiLatest3D)rebuild(window.KariyushiLatest3D);
 })();
