@@ -1,0 +1,84 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email"]
+    },
+    "Design": {
+      "title": "Design",
+      "description": "A Kariyushi Wear design project",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "status": { "type": "string", "enum": ["draft", "proposed", "finalized"] },
+        "conditions": {
+          "type": "object",
+          "properties": {
+            "purpose": { "type": "string" },
+            "impression": { "type": "string" },
+            "baseColor": { "type": "string" },
+            "motif": { "type": "string" },
+            "quantity": { "type": "number" }
+          }
+        },
+        "proposals": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "imageUrl": { "type": "string" },
+              "description": { "type": "string" },
+              "features": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        },
+        "selectedProposalIndex": { "type": "number" },
+        "materials": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "editorSettings": {
+          "type": "object",
+          "properties": {
+            "patternDensity": { "type": "number" },
+            "patternSize": { "type": "number" },
+            "collarStyle": { "type": "string" },
+            "logoPosition": { "type": "string" },
+            "buttonType": { "type": "string" }
+          }
+        },
+        "sizeData": {
+          "type": "object",
+          "properties": {
+            "height": { "type": "number" },
+            "chest": { "type": "number" },
+            "shoulder": { "type": "number" },
+            "waist": { "type": "number" }
+          }
+        },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "status"]
+    }
+  },
+  "firestore": {
+    "/designs/{designId}": {
+      "schema": "Design",
+      "description": "Collection of Kariyushi wear designs"
+    },
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profile data"
+    }
+  }
+}

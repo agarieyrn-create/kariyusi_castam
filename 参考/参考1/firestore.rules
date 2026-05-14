@@ -1,0 +1,84 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Helpers ---
+    function isSignedIn() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // --- Validation Helpers ---
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'email'])
+        && data.keys().size() >= 2
+        && data.uid == request.auth.uid
+        && data.email is string && data.email.size() <= 256;
+    }
+
+    function isValidDesign(data) {
+      return data.keys().hasAll(['userId', 'status'])
+        && data.userId == request.auth.uid
+        && data.status in ['draft', 'proposed', 'finalized']
+        && (data.title == null || (data.title is string && data.title.size() <= 100))
+        && (data.conditions == null || data.conditions is map)
+        && (data.proposals == null || data.proposals is list)
+        && (data.materials == null || data.materials is list)
+        && (data.editorSettings == null || data.editorSettings is map);
+    }
+
+    // --- Collections ---
+
+    match /users/{userId} {
+      allow get: if isOwner(userId) && isValidId(userId);
+      allow create: if isOwner(userId) && isValidId(userId) && isValidUser(incoming());
+      allow update: if isOwner(userId) && isValidId(userId) && isValidUser(incoming())
+        && (incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'updatedAt']));
+    }
+
+    match /designs/{designId} {
+      allow get: if isSignedIn() && isValidId(designId) && existing().userId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(designId) && isValidDesign(incoming())
+        && incoming().userId == request.auth.uid
+        && incoming().status == 'draft';
+      
+      allow update: if isSignedIn() && isValidId(designId) && existing().userId == request.auth.uid
+        && isValidDesign(incoming())
+        && incoming().userId == existing().userId
+        && (
+          // Action: Propose (AI result generated)
+          (existing().status == 'draft' && incoming().status == 'proposed' 
+            && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'proposals', 'updatedAt'])) ||
+          // Action: Edit (User adjustment)
+          (existing().status == 'proposed' && incoming().status == 'proposed'
+            && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'selectedProposalIndex', 'materials', 'editorSettings', 'title', 'updatedAt', 'sizeData'])) ||
+          // Action: Finalize
+          (existing().status == 'proposed' && incoming().status == 'finalized'
+            && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt']))
+        );
+      
+      allow delete: if isSignedIn() && isValidId(designId) && existing().userId == request.auth.uid;
+    }
+  }
+}

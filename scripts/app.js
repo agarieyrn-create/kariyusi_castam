@@ -83,6 +83,20 @@
     });
   }
 
+  function updateAIAssistant() {
+    const aiAdvice = document.getElementById("aiAdvice");
+    if (!aiAdvice) return;
+    const mood = state.brief.mood || "上品";
+    const advices = {
+      "上品": "「上品」な印象を与えるためには、柄の密度を少し抑えると、洗練されたスタイルになります。",
+      "伝統的": "「伝統的」な雰囲気を強調するため、襟の形はレギュラーカラーがおすすめです。",
+      "リゾート": "「リゾート」感を出すには、柄を大きめに配置し、開放的な開襟スタイルがマッチします。",
+      "現代的": "「現代的」なスタイルには、ボタンの色を変えて引き締めるのがポイントです。",
+      "大胆": "「大胆」なデザインは、ロゴ位置をあえて「なし」にして柄を主役にするのが効果的です。"
+    };
+    aiAdvice.textContent = advices[mood] || advices["上品"];
+  }
+
   function renderAll() {
     const proposal = selectedProposal();
     if (!proposal || !state.catalog || !state.estimate) return;
@@ -115,6 +129,7 @@
     renderers.renderFitReport(document.getElementById("fitReport"), state.model, fit);
     renderers.renderDesignNotes(document.getElementById("designNotes"), proposal, state.edit, state.catalog.assets);
     renderers.renderSpec(document.getElementById("specSheet"), proposal, state.brief, state.edit, fit, state.estimate);
+    updateAIAssistant();
     syncLiveBrief();
     animateDynamicCards();
     window.KariyushiLatest3D = {
@@ -203,6 +218,11 @@
       state.model.view = button.dataset.view;
       state.model.rotation = { front: 0, side: 90, back: 180 }[button.dataset.view] || 0;
       renderAll();
+    });
+
+    // BODY ON/OFF
+    document.getElementById("toggleBodyBtn")?.addEventListener("click", () => {
+      if (window.KariyushiThreeViewer) window.KariyushiThreeViewer.toggleBody();
     });
 
     const modelPreview = document.getElementById("modelPreview");
@@ -316,7 +336,7 @@
 
     const sections = [...document.querySelectorAll("main section[id]")];
     const navLinks = [...document.querySelectorAll(".nav a[href^='#']")];
-    const revealItems = [...document.querySelectorAll(".section-head, fieldset, .proposal-card, .asset-card, .control-panel, .preview-shell, .model-preview, .spec-sheet")];
+    const revealItems = [...document.querySelectorAll(".section-head, fieldset, .proposal-card, .asset-card, .control-panel, .preview-shell, .model-preview, .spec-sheet, .how-to-card")];
     revealItems.forEach((item, index) => {
       item.classList.add("reveal");
       item.style.transitionDelay = `${Math.min(index * 35, 220)}ms`;
@@ -336,6 +356,80 @@
     updateScrollState();
   }
 
+  function setupDesignStudio() {
+    const editor = window.KariyushiFabricEditor;
+    const store = window.KariyushiDesignStore;
+    if (!editor || !store) return;
+
+    editor.init("fabricCanvas", (dataUrl) => {
+      /* 将来: 3Dテクスチャに反映 */
+    });
+
+    // Logo upload
+    document.getElementById("logoUpload")?.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (file) editor.addLogo(file);
+    });
+
+    // Text add
+    document.getElementById("addTextBtn")?.addEventListener("click", () => {
+      const text = document.getElementById("studioText").value || "OKINAWA";
+      const font = document.getElementById("studioFont").value;
+      const color = document.getElementById("studioTextColor").value;
+      const stroke = document.getElementById("studioStrokeColor").value;
+      const strokeWidth = Number(document.getElementById("studioStrokeWidth").value);
+      editor.addText(text, { font, color, stroke, strokeWidth });
+    });
+
+    // Delete selected
+    document.getElementById("deleteSelectedBtn")?.addEventListener("click", () => editor.deleteSelected());
+
+    // Clear all
+    document.getElementById("clearCanvasBtn")?.addEventListener("click", () => editor.clearAll());
+
+    // Export PNG
+    document.getElementById("exportPngBtn")?.addEventListener("click", () => {
+      editor.exportPNG(`kariyushi-${Date.now()}.png`);
+      showStudioStatus("PNG画像を書き出しました");
+    });
+
+    // Save design
+    document.getElementById("saveDesignBtn")?.addEventListener("click", () => {
+      const designData = {
+        fabricJson: editor.toJSON(),
+        brief: state.brief,
+        edit: state.edit,
+        model: state.model
+      };
+      const saved = store.saveDesign(designData);
+      showStudioStatus(`保存しました（ID: ${saved.id}）`);
+    });
+
+    // Share URL
+    document.getElementById("shareUrlBtn")?.addEventListener("click", async () => {
+      const designData = {
+        fabricJson: editor.toJSON(),
+        brief: state.brief,
+        edit: state.edit
+      };
+      const ok = await store.copyShareUrl(designData);
+      showStudioStatus(ok ? "共有URLをクリップボードにコピーしました" : "コピーに失敗しました");
+    });
+
+    // Load from URL if available
+    const fromUrl = store.loadFromUrl();
+    if (fromUrl?.fabricJson) {
+      editor.fromJSON(fromUrl.fabricJson);
+    }
+  }
+
+  function showStudioStatus(msg) {
+    const el = document.getElementById("studioStatus");
+    if (!el) return;
+    el.textContent = msg;
+    setTimeout(() => { el.textContent = ""; }, 4000);
+  }
+
   async function init() {
     state.catalog = await api.getCatalog();
     setupChoices();
@@ -344,6 +438,7 @@
     setupModel();
     setupForms();
     setupSiteMotion();
+    setupDesignStudio();
     await generateDesigns();
   }
 

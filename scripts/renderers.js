@@ -36,11 +36,12 @@
     return ((Number(value) || 0) % 360 + 360) % 360;
   }
 
+  /* ── Rich Fabric Pattern Defs ── */
   function fabricDefs(ids, palette, density, scale, asset) {
     const tile = Math.max(68, Number(density) * 1.9);
     const assetHref = asset?.type === "motif" ? asset.href : "";
     const image = assetHref
-      ? `<image href="${esc(assetHref)}" x="${tile * .18}" y="${tile * .16}" width="${tile * .42}" height="${tile * .42}" preserveAspectRatio="xMidYMid meet" opacity=".28"></image>`
+      ? `<image href="${esc(assetHref)}" x="${tile * .12}" y="${tile * .1}" width="${tile * .5}" height="${tile * .5}" preserveAspectRatio="xMidYMid meet" opacity=".32"></image>`
       : "";
     return `
       <linearGradient id="${ids.shadow}" x1="0" x2="1">
@@ -52,15 +53,27 @@
       <pattern id="${ids.fabric}" width="${tile}" height="${tile}" patternUnits="userSpaceOnUse" patternTransform="scale(${scale})">
         <rect width="${tile}" height="${tile}" fill="${palette.base}"></rect>
         ${image}
-        <path d="M${tile * .1} ${tile * .68} C${tile * .28} ${tile * .42}, ${tile * .5} ${tile * .42}, ${tile * .72} ${tile * .68}" fill="none" stroke="${palette.accent}" stroke-width="4.2" opacity=".82"></path>
-        <path d="M${tile * .18} ${tile * .62} C${tile * .23} ${tile * .5}, ${tile * .34} ${tile * .46}, ${tile * .46} ${tile * .5} C${tile * .36} ${tile * .58}, ${tile * .28} ${tile * .66}, ${tile * .22} ${tile * .78}" fill="${palette.dark}" opacity=".78"></path>
-        <path d="M${tile * .64} ${tile * .18} C${tile * .82} ${tile * .2}, ${tile * .92} ${tile * .36}, ${tile * .86} ${tile * .52} C${tile * .72} ${tile * .48}, ${tile * .62} ${tile * .36}, ${tile * .64} ${tile * .18}Z" fill="${palette.accent}" opacity=".74"></path>
-        <circle cx="${tile * .35}" cy="${tile * .27}" r="${Math.max(5, tile * .068)}" fill="${palette.sub}" opacity=".9"></circle>
-        <circle cx="${tile * .44}" cy="${tile * .31}" r="${Math.max(4, tile * .052)}" fill="${palette.sub}" opacity=".82"></circle>
-        <path d="M${tile * .76} ${tile * .72} q${tile * .12} -${tile * .16} ${tile * .24} 0" fill="none" stroke="${palette.dark}" stroke-width="2.4" opacity=".68"></path>
+        <!-- hibiscus-like flower -->
+        <g opacity=".82">
+          <ellipse cx="${tile*.38}" cy="${tile*.32}" rx="${tile*.1}" ry="${tile*.18}" fill="${palette.accent}" transform="rotate(-20 ${tile*.38} ${tile*.32})"></ellipse>
+          <ellipse cx="${tile*.38}" cy="${tile*.32}" rx="${tile*.1}" ry="${tile*.18}" fill="${palette.accent}" transform="rotate(52 ${tile*.38} ${tile*.32})"></ellipse>
+          <ellipse cx="${tile*.38}" cy="${tile*.32}" rx="${tile*.1}" ry="${tile*.18}" fill="${palette.accent}" transform="rotate(124 ${tile*.38} ${tile*.32})"></ellipse>
+          <ellipse cx="${tile*.38}" cy="${tile*.32}" rx="${tile*.1}" ry="${tile*.18}" fill="${palette.accent}" transform="rotate(-92 ${tile*.38} ${tile*.32})"></ellipse>
+          <ellipse cx="${tile*.38}" cy="${tile*.32}" rx="${tile*.1}" ry="${tile*.18}" fill="${palette.accent}" transform="rotate(196 ${tile*.38} ${tile*.32})"></ellipse>
+          <circle cx="${tile*.38}" cy="${tile*.32}" r="${tile*.05}" fill="${palette.sub}" opacity=".95"></circle>
+        </g>
+        <!-- leaf shapes -->
+        <path d="M${tile*.06} ${tile*.68} C${tile*.18} ${tile*.48}, ${tile*.34} ${tile*.44}, ${tile*.5} ${tile*.52} C${tile*.34} ${tile*.56}, ${tile*.2} ${tile*.62}, ${tile*.06} ${tile*.68}Z" fill="${palette.dark}" opacity=".65"></path>
+        <path d="M${tile*.54} ${tile*.72} C${tile*.64} ${tile*.56}, ${tile*.78} ${tile*.52}, ${tile*.92} ${tile*.58} C${tile*.8} ${tile*.64}, ${tile*.66} ${tile*.7}, ${tile*.54} ${tile*.72}Z" fill="${palette.dark}" opacity=".55"></path>
+        <!-- wave curves -->
+        <path d="M${tile*.02} ${tile*.88} Q${tile*.25} ${tile*.76} ${tile*.5} ${tile*.88} Q${tile*.75} ${tile*1} ${tile*.98} ${tile*.88}" fill="none" stroke="${palette.accent}" stroke-width="2.8" opacity=".42"></path>
+        <!-- small accents -->
+        <circle cx="${tile*.72}" cy="${tile*.22}" r="${tile*.035}" fill="${palette.sub}" opacity=".85"></circle>
+        <circle cx="${tile*.82}" cy="${tile*.38}" r="${tile*.025}" fill="${palette.sub}" opacity=".7"></circle>
       </pattern>`;
   }
 
+  /* ── Shirt SVG Parts ── */
   function shirtParts(proposal, palettes, edit, options = {}) {
     const palette = palettes[edit.palette] || palettes[proposal.palette];
     const density = Number(edit.density || proposal.density || 46);
@@ -117,6 +130,7 @@
       </svg>`;
   }
 
+  /* ── Render Functions ── */
   function renderHero(targets, proposal, palettes, edit, fit, assets, config) {
     targets.preview.innerHTML = shirtSvg(proposal, palettes, edit, { assets, config });
     const palette = palettes[edit.palette];
@@ -205,7 +219,8 @@
     };
   }
 
-  function renderModel(target, proposal, palettes, edit, model, sizeTable, assets, config) {
+  /* ── SVG Mannequin Model (restored & improved) ── */
+  function renderModelSVG(target, proposal, palettes, edit, model, sizeTable, assets, config) {
     const fit = fitAnalysis(model, sizeTable);
     const rotation = normalizeAngle(model.rotation ?? { front: 0, side: 90, back: 180 }[model.view]);
     const radians = rotation * Math.PI / 180;
@@ -220,7 +235,6 @@
     const bodyTransform = `translate(380 70) scale(${xScale} 1)`;
     const shirtTransform = `translate(${380 - 140 * shirtScale * xScale} ${shirtY}) scale(${shirtScale * xScale} ${shirtScale})`;
     const measureOpacity = Math.max(.22, 1 - sideAmount * .72);
-    const rotationLabel = `${Math.round(rotation)}°`;
 
     target.innerHTML = `
       <svg class="model-svg" viewBox="${viewBox}" role="img" aria-label="着用模型" data-rotation="${rotation}">
@@ -236,7 +250,7 @@
         </defs>
         <ellipse cx="380" cy="594" rx="${120 * xScale + 38}" ry="17" class="turntable-shadow"></ellipse>
         <g class="rotation-hud">
-          <text x="522" y="102">${rotationLabel}</text>
+          <text x="522" y="102">${Math.round(rotation)}°</text>
           <text x="522" y="124">ドラッグで回転</text>
         </g>
         <g class="measure-lines" opacity="${measureOpacity.toFixed(2)}">
@@ -263,6 +277,7 @@
   }
 
   function renderFitReport(target, model, fit) {
+    const easeClass = fit.chestEase < 8 ? "tight" : fit.chestEase > 24 ? "loose" : "good";
     target.innerHTML = `
       <div class="fit-score">
         <span>フィット判定</span>
@@ -270,7 +285,7 @@
       </div>
       <dl>
         <div><dt>推奨サイズ</dt><dd>${fit.recommendedSize}</dd></div>
-        <div><dt>胸まわりのゆとり</dt><dd>${fit.chestEase > 0 ? "+" : ""}${fit.chestEase}cm</dd></div>
+        <div><dt>胸まわりのゆとり</dt><dd class="${easeClass}">${fit.chestEase > 0 ? "+" : ""}${fit.chestEase}cm</dd></div>
         <div><dt>肩幅の余裕</dt><dd>${fit.shoulderEase > 0 ? "+" : ""}${fit.shoulderEase}cm</dd></div>
         <div><dt>着丈差</dt><dd>${fit.lengthDiff > 0 ? "+" : ""}${fit.lengthDiff}cm</dd></div>
       </dl>
@@ -298,36 +313,49 @@
 
   function renderSpec(target, proposal, brief, edit, fit, estimate) {
     target.innerHTML = `
+      <div class="spec-header">
+        <div class="spec-id">
+          <span class="spec-label">Design ID</span>
+          <strong>KD-${new Date().toISOString().slice(0,10).replace(/-/g,"")}-001</strong>
+        </div>
+        <div class="spec-id" style="text-align:right">
+          <span class="spec-label">Date</span>
+          <strong>${new Date().toLocaleDateString("ja-JP")}</strong>
+        </div>
+      </div>
       <div class="spec-row"><span>用途</span><strong>${esc(brief.scene)}</strong></div>
       <div class="spec-row"><span>選択案</span><strong>${esc(proposal.title)}</strong></div>
       <div class="spec-row"><span>柄・配色</span><strong>${esc(proposal.pattern.name)} / ${esc(edit.palette)}</strong></div>
       <div class="spec-row"><span>仕様</span><strong>${esc(edit.collar)}、${esc(edit.button)}、ロゴ ${esc(logoLabels[edit.logo] || edit.logo)}</strong></div>
       <div class="spec-row"><span>サイズ確認</span><strong>推奨 ${esc(fit.recommendedSize)} / 胸ゆとり ${fit.chestEase > 0 ? "+" : ""}${fit.chestEase}cm</strong></div>
       <div class="spec-row"><span>数量</span><strong>${estimate.quantity}枚</strong></div>
-      <div class="spec-row"><span>概算</span><strong>単価 ${yen.format(estimate.unitPrice)}円 / 合計 ${yen.format(estimate.total)}円</strong></div>
-      <p class="spec-note">概算にはサンプル作成費 ${yen.format(estimate.samplePrice)}円を含みます。正式見積りには生地、プリント方式、縫製仕様の確認が必要です。</p>`;
+      <div class="spec-row spec-price"><span>概算</span><strong>単価 ¥${yen.format(estimate.unitPrice)} / 合計 ¥${yen.format(estimate.total)}</strong></div>
+      <p class="spec-note">概算にはサンプル作成費 ¥${yen.format(estimate.samplePrice)}を含みます。正式見積りには生地、プリント方式、縫製仕様の確認が必要です。</p>`;
   }
 
-  function renderModel3D(target, proposal, palettes, edit, model, sizeTable) {
+  /* ── Hybrid Model Renderer (3D priority, SVG fallback) ── */
+  function renderModel(target, proposal, palettes, edit, model, sizeTable, assets, config) {
     const fit = fitAnalysis(model, sizeTable);
-    target.innerHTML = `
-      <div class="three-tryon">
-        <canvas id="tryonCanvas" class="tryon-canvas" aria-label="3D着用模型"></canvas>
-        <div class="tryon-overlay top-left">
-          <strong>3D試着ビュー</strong>
-          <span>ドラッグで回転 / ホイールで拡大</span>
-        </div>
-        <div class="tryon-overlay top-right">
-          <strong>${esc(fit.recommendedSize)}</strong>
-          <span>推奨サイズ</span>
-        </div>
-        <div class="tryon-overlay bottom-left">
-          <span>肩幅 ${fit.selected.shoulder}cm</span>
-          <span>身幅 ${Math.round(fit.selected.chest / 2)}cm</span>
-          <span>着丈 ${fit.selected.length}cm</span>
-        </div>
-      </div>`;
-    return fit;
+    console.log("[Kariyushi] renderModel called. THREE:", typeof THREE, "Viewer:", !!window.KariyushiThreeViewer);
+    // Try 3D via Three.js custom event
+    if (typeof THREE !== "undefined" && window.KariyushiThreeViewer) {
+      try {
+        // Ensure container is ready for canvas
+        if (!target.querySelector("canvas.tryon-canvas")) {
+          target.innerHTML = "";
+        }
+        const payload = { proposal, palettes, edit, model, fit, assets, config };
+        window.KariyushiLatest3D = payload;
+        window.dispatchEvent(new CustomEvent("kariyushi:render3d", { detail: payload }));
+        console.log("[Kariyushi] 3D render dispatched successfully");
+        return fit;
+      } catch (err) {
+        console.error("[Kariyushi] 3D render failed, falling back to SVG:", err);
+      }
+    }
+    // Fallback to SVG
+    console.log("[Kariyushi] Using SVG fallback");
+    return renderModelSVG(target, proposal, palettes, edit, model, sizeTable, assets, config);
   }
 
   window.KariyushiRenderers = {
@@ -335,7 +363,7 @@
     renderProposals,
     renderAssets,
     renderEditor,
-    renderModel: renderModel3D,
+    renderModel,
     renderFitReport,
     renderDesignNotes,
     renderSpec,

@@ -1,0 +1,366 @@
+1. 全体構成
+
+フロント
+
+Next.js / React
+Three.js または React Three Fiber
+Fabric.js / Canvas API
+Zustand などの状態管理
+
+3D
+
+Blender
+GLB / glTF
+UV展開済みのTシャツモデル
+マネキンモデル
+服のサイズ別モデル
+
+バックエンド
+
+Node.js / NestJS / Next.js API
+PostgreSQL
+S3互換ストレージ
+Redis
+PDF生成
+管理画面
+
+インフラ
+
+Vercel / AWS / Google Cloud
+CloudFrontなどのCDN
+Sentry
+Google Analytics / GA4
+Stripe / Shopify / 独自注文フォーム
+
+glTFはWeb向け3Dモデル配信の標準的な形式で、Three.jsもGLTFLoaderで読み込みに対応しています。
+
+2. 必要な機能一覧
+ユーザー側
+3Dマネキン表示
+Tシャツ・パンツ・ユニフォーム切り替え
+正面、背面、側面表示
+360度回転
+拡大縮小
+BODY ON / OFF
+色変更
+柄変更
+ロゴアップロード
+文字入力
+フォント選択
+文字の縁取り
+配置、回転、拡大縮小
+デザイン保存
+共有URL発行
+画像書き出し
+見積もり
+注文
+管理者側
+商品登録
+3Dモデル登録
+カラーパレット登録
+デザインテンプレート登録
+フォント登録
+ロゴ配置可能エリア設定
+価格ルール設定
+注文管理
+入稿用データ確認
+PDF出力
+3. 3D制作で必要なもの
+
+一番重要なのはここです。
+
+用意する3Dデータ
+マネキンモデル
+Tシャツモデル
+パンツモデル
+長袖、半袖、ポロシャツなどの商品別モデル
+サイズ別モデル
+UVマップ
+法線マップ
+ラフネスマップ
+AOマップ
+テクスチャ画像
+
+Webでは GLB形式 にして読み込むのが扱いやすいです。glTFは3Dシーンやモデルを効率的に読み込むための仕様です。
+
+3D制作フロー
+Blenderで服の3Dモデルを作る
+マネキンに服を着せる
+UV展開する
+印刷可能エリアをUV上で定義する
+マテリアルを分ける
+例：本体、袖、襟、リブ、プリント面
+GLBで書き出す
+Webで読み込み確認
+表示が重ければポリゴン削減
+テクスチャ圧縮
+CDNに配置
+4. フロント実装のやり方
+
+Reactで作るなら、React Three Fiber がかなり便利です。これはThree.jsをReactコンポーネントとして扱えるライブラリです。
+
+構成例：
+
+/components
+  /viewer
+    ThreeDViewer.tsx
+    Mannequin.tsx
+    Shirt.tsx
+    Controls.tsx
+  /designer
+    ColorPanel.tsx
+    LogoUploader.tsx
+    TextEditor.tsx
+    PatternSelector.tsx
+  /order
+    QuotePanel.tsx
+    SaveDesignButton.tsx
+
+表示処理はこういう流れです。
+
+商品選択
+↓
+GLB読み込み
+↓
+マネキン表示
+↓
+Tシャツ表示
+↓
+色・柄・ロゴ・文字を状態管理
+↓
+Canvasで2Dデザインを生成
+↓
+生成した画像を3Dモデルのテクスチャに貼る
+↓
+保存・注文
+5. デザイン編集の核
+
+Tシャツ上のデザインは、基本的に 2Dキャンバスで作って、それを3Dモデルに貼る 方式がよいです。
+
+使う技術：
+
+Fabric.js
+Canvas API
+SVG
+PNG
+Three.js Texture
+
+Fabric.jsはCanvas上で画像・図形・文字などをオブジェクトとして操作できます。ロゴの移動、拡大縮小、回転、文字編集に向いています。
+
+実装イメージ：
+
+Fabric.jsで2Dデザイン編集
+↓
+canvas.toDataURL()
+↓
+Three.jsのTextureに変換
+↓
+Tシャツモデルのmaterial.mapに適用
+
+保存するデータは画像だけではなく、編集可能なJSONも保存します。
+
+{
+  "productId": "shirt_001",
+  "modelId": "male_mannequin_001",
+  "colors": {
+    "body": "#ffffff",
+    "sleeve": "#000000",
+    "collar": "#ff0000"
+  },
+  "objects": [
+    {
+      "type": "logo",
+      "url": "/uploads/logo.png",
+      "x": 0.42,
+      "y": 0.32,
+      "scale": 0.8,
+      "rotation": 0
+    },
+    {
+      "type": "text",
+      "value": "TOKYO FC",
+      "font": "Gothic",
+      "color": "#000000",
+      "stroke": "#ffffff"
+    }
+  ]
+}
+6. バックエンドで必要なもの
+DBテーブル例
+users
+products
+product_models
+product_colors
+design_templates
+designs
+design_assets
+orders
+order_items
+price_rules
+fonts
+admin_users
+保存するもの
+デザインJSON
+プレビュー画像
+アップロード画像
+生成PDF
+注文情報
+見積もり金額
+入稿用データ
+ストレージ
+
+画像やGLBはDBに入れず、S3などに保存します。
+
+/assets/models/shirt_001.glb
+/assets/textures/pattern_001.png
+/uploads/logos/user_logo.png
+/designs/preview/design_123.png
+/orders/order_123.pdf
+7. 注文・入稿データの考え方
+
+本格運用では、画面で見えている画像と、実際に印刷できるデータは分けた方がよいです。
+
+ユーザー表示用
+低〜中解像度PNG
+Web用3Dプレビュー
+共有URL
+制作用・入稿用
+高解像度PNG
+SVG
+PDF
+ロゴ元データ
+色指定
+配置座標
+商品ID
+サイズ・枚数
+
+注文時に出すべき情報：
+
+商品名
+サイズ
+数量
+ボディカラー
+プリント位置
+ロゴ画像
+チーム名
+背番号
+個人名
+見積もり金額
+デザインID
+プレビュー画像
+8. 開発ステップ
+Phase 1：検証
+1種類のTシャツモデル
+1体のマネキン
+360度回転
+色変更
+ロゴ1点配置
+デザイン保存
+Phase 2：MVP
+正面・背面切り替え
+文字入力
+フォント選択
+画像アップロード
+デザインID発行
+共有URL
+見積フォーム
+Phase 3：本格版
+商品複数対応
+パンツ・上下セット対応
+BODY ON / OFF
+テンプレートデザイン
+サイズ別表示
+管理画面
+PDF出力
+注文管理
+EC連携
+Phase 4：高度化
+体型別マネキン
+AR表示
+チームオーダー
+背番号・個人名の一括登録
+AIデザイン提案
+印刷工場向けデータ出力
+9. チーム構成
+
+本格的に作るなら、最低でもこの役割が必要です。
+
+PM / 仕様設計
+UI/UXデザイナー
+フロントエンドエンジニア
+3Dエンジニア
+バックエンドエンジニア
+3Dモデラー
+インフラ担当
+印刷・生産フローに詳しい人
+
+小さく始めるなら、最初は
+
+フロントエンド兼3Dエンジニア
+バックエンドエンジニア
+3Dモデラー
+
+の3人体制でも可能です。
+
+10. 一番難しいところ
+
+技術的に難しい順です。
+
+UVとプリント位置の整合
+2D編集画面と3D表示の一致
+ロゴや文字を服の曲面に自然に貼る処理
+スマホで軽く動かす最適化
+印刷可能な入稿データ生成
+商品ごとの差分管理
+管理画面の設計
+
+特に「画面ではきれいだけど、実際の印刷位置と違う」が起きやすいので、3Dよりも 入稿データ設計 が重要です。
+
+11. おすすめ技術スタック
+
+本格版ならこれが無難です。
+
+Frontend:
+Next.js
+React
+React Three Fiber
+Three.js
+Drei
+Fabric.js
+Zustand
+
+Backend:
+Next.js API / NestJS
+PostgreSQL
+Prisma
+S3
+Redis
+
+3D:
+Blender
+GLB / glTF
+KTX2 texture compression
+Draco compression
+
+Infra:
+AWS / Vercel
+CloudFront
+Sentry
+GitHub Actions
+12. 最初に作るべきプロトタイプ
+
+最初から全部作るより、まずこれを作るのがよいです。
+
+1商品だけの3D Tシャツシミュレーター
+
+機能はこれだけでOKです。
+
+GLB読み込み
+回転
+色変更
+ロゴアップロード
+ロゴ位置調整
+正面プレビュー
+背面プレビュー
+デザイン保存
+共有URL
