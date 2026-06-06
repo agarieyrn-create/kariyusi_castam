@@ -12,10 +12,11 @@
   /* ── Save Design ── */
   function saveDesign(designData) {
     const designs = readAll();
+    const { id, createdAt, ...rest } = designData || {};
     const entry = {
       id: uid(),
       createdAt: new Date().toISOString(),
-      ...designData
+      ...rest
     };
     designs.unshift(entry);
     if (designs.length > MAX_SAVED_DESIGNS) designs.length = MAX_SAVED_DESIGNS;
@@ -23,7 +24,11 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify(designs));
     } catch (_error) {
       designs.pop();
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(designs));
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(designs));
+      } catch (err2) {
+        throw new Error("localStorageの容量制限に達したため、保存できません。不要なデータを削除してください。");
+      }
     }
     return entry;
   }
@@ -46,14 +51,39 @@
   function generateShareUrl(designData) {
     try {
       const payload = JSON.stringify({ version: 1, ...designData });
-      if (new Blob([payload]).size > MAX_SHARE_PAYLOAD_BYTES) return null;
-      const compressed = btoa(unescape(encodeURIComponent(payload)));
+      if (new Blob([payload]).size > MAX_SHARE_PAYLOAD_BYTES) {
+        throw new Error("デザインデータのサイズが大きすぎるため、共有URLを作成できません。（上限120KB）");
+      }
+      const uint8 = new TextEncoder().encode(payload);
+      const binString = Array.from(uint8, (x) => String.fromCharCode(x)).join("");
+      const compressed = btoa(binString);
       const url = new URL(window.location.href.split("?")[0]);
       url.searchParams.set("design", compressed);
       return url.toString();
-    } catch (_) {
-      return null;
+    } catch (e) {
+      console.error("共有URL生成エラー:", e);
+      throw e;
     }
+  }
+
+  /* ── Schema Validation ── */
+  function validateDesignData(data) {
+    if (!data || typeof data !== "object") return null;
+    const validKeys = [
+      "version", "palette", "pattern", "logo", "collar", 
+      "button", "density", "scale", "assetId", "fabricJson"
+    ];
+    const validated = {};
+    for (const key of validKeys) {
+      if (data[key] !== undefined) {
+        if (key === "fabricJson") {
+          // fabricJsonは文字列またはオブジェクトであることを確認
+          if (typeof data[key] !== "string" && typeof data[key] !== "object") continue;
+        }
+        validated[key] = data[key];
+      }
+    }
+    return validated;
   }
 
   /* ── Load from URL ── */
@@ -62,20 +92,29 @@
       const params = new URLSearchParams(window.location.search);
       const data = params.get("design");
       if (!data) return null;
-      return JSON.parse(decodeURIComponent(escape(atob(data))));
-    } catch (_) {
+      
+      const binString = atob(data);
+      const uint8 = Uint8Array.from(binString, (c) => c.charCodeAt(0));
+      const decodedPayload = new TextDecoder().decode(uint8);
+      
+      const parsed = JSON.parse(decodedPayload);
+      return validateDesignData(parsed);
+    } catch (e) {
+      console.error("共有デザイン読み込みエラー:", e);
       return null;
     }
   }
 
   /* ── Copy to Clipboard ── */
   async function copyShareUrl(designData) {
-    const url = generateShareUrl(designData);
-    if (!url) return false;
     try {
-      await navigator.clipboard.writeText(url);
-      return true;
-    } catch (_) {
+      const url = generateShareUrl(designData);
+      if (!url) return false;
+      if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+        await navigator.clipboard.writeText(url);
+        return true;
+      }
+      // フォールバック
       const input = document.createElement("input");
       input.value = url;
       document.body.appendChild(input);
@@ -83,6 +122,9 @@
       document.execCommand("copy");
       document.body.removeChild(input);
       return true;
+    } catch (e) {
+      console.error("クリップボード書き込みエラー:", e);
+      return false;
     }
   }
 

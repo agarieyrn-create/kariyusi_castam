@@ -35,6 +35,9 @@
   }
 
   function uid(prefix) {
+    if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+      return `${prefix}_${crypto.randomUUID()}`;
+    }
     return `${prefix}_${Math.random().toString(16).slice(2)}`;
   }
 
@@ -318,8 +321,7 @@
         <li>柄：${esc(proposal.pattern.name)} / 参考：${esc(asset?.title || "未選択")}</li>
         <li>密度 ${esc(edit.density)} / 拡大率 ${esc(edit.scale)}%</li>
         <li>衿：${esc(edit.collar)} / ロゴ：${esc(logoLabels[edit.logo] || edit.logo)}</li>
-      </ul>`;
-    target.innerHTML += `
+      </ul>
       <div class="quality-grid">
         <div><span>沖縄らしさ</span><strong>${score.okinawa}</strong></div>
         <div><span>量産適性</span><strong>${score.production}</strong></div>
@@ -352,25 +354,19 @@
   /* ── Hybrid Model Renderer (3D priority, SVG fallback) ── */
   function renderModel(target, proposal, palettes, edit, model, sizeTable, assets, config) {
     const fit = fitAnalysis(model, sizeTable);
-    console.log("[Kariyushi] renderModel called. THREE:", typeof THREE, "Viewer:", !!window.KariyushiThreeViewer);
-    // Try 3D via Three.js custom event
     if (typeof THREE !== "undefined" && window.KariyushiThreeViewer) {
       try {
-        // Ensure container is ready for canvas
         if (!target.querySelector("canvas.tryon-canvas")) {
           target.innerHTML = "";
         }
         const payload = { proposal, palettes, edit, model, fit, assets, config };
         window.KariyushiLatest3D = payload;
         window.dispatchEvent(new CustomEvent("kariyushi:render3d", { detail: payload }));
-        console.log("[Kariyushi] 3D render dispatched successfully");
         return fit;
       } catch (err) {
-        console.error("[Kariyushi] 3D render failed, falling back to SVG:", err);
+        // 静かにフォールバック
       }
     }
-    // Fallback to SVG
-    console.log("[Kariyushi] Using SVG fallback");
     return renderModelSVG(target, proposal, palettes, edit, model, sizeTable, assets, config);
   }
 

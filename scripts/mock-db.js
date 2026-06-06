@@ -12,11 +12,11 @@
       "若葉グリーン": { base: "#eef7e9", accent: "#5f8f61", sub: "#d76f54", dark: "#244633" }
     },
     patterns: [
-      { id: "bingata", name: "紅型風ウェーブ", motifs: ["紅型風", "波模様"], formal: 4, okinawa: 5, bold: 3 },
-      { id: "hibiscus", name: "淡色ハイビスカス", motifs: ["ハイビスカス"], formal: 3, okinawa: 4, bold: 4 },
-      { id: "shisa", name: "シーサー小紋", motifs: ["シーサー"], formal: 2, okinawa: 5, bold: 5 },
-      { id: "leaf", name: "ヤシ葉ボタニカル", motifs: ["ヤシ葉"], formal: 4, okinawa: 3, bold: 3 },
-      { id: "wave", name: "青波ミンサー", motifs: ["波模様"], formal: 5, okinawa: 4, bold: 2 }
+      { id: "bingata", name: "紅型風ウェーブ", motifs: ["紅型風", "波模様"], motif_tags: ["紅型風", "波模様"], formal: 4, okinawa: 5, bold: 3 },
+      { id: "hibiscus", name: "淡色ハイビスカス", motifs: ["ハイビスカス"], motif_tags: ["ハイビスカス"], formal: 3, okinawa: 4, bold: 4 },
+      { id: "shisa", name: "シーサー小紋", motifs: ["シーサー"], motif_tags: ["シーサー"], formal: 2, okinawa: 5, bold: 5 },
+      { id: "leaf", name: "ヤシ葉ボタニカル", motifs: ["ヤシ葉"], motif_tags: ["ヤシ葉"], formal: 4, okinawa: 3, bold: 3 },
+      { id: "wave", name: "青波ミンサー", motifs: ["波模様"], motif_tags: ["波模様"], formal: 5, okinawa: 4, bold: 2 }
     ],
     conceptLanes: [
       {

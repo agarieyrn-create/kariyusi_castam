@@ -1,48 +1,78 @@
-# システム構築に必要なAPI・設定
+# システム環境構築手順書 (System Setup Guide)
 
-現状は `APP_MODE=mock` 相当で、外部APIなしで動く構成です。実運用に進める場合は、以下を準備してください。
+本ドキュメントは、本システムをローカル開発環境および本番環境（Supabase、外部API、クラウドストレージ等）に接続して構築するための手順を定義します。
 
-## 必須
+---
 
-1. Supabase
-   - 用途: 素材DB、デザインセッション、生成案、問い合わせ保存
-   - 必要情報: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
+## 📋 システム要件
 
-2. OpenAI API
-   - 用途: ヒアリング回答のタグ化、3案のコンセプト文生成、素材選定理由の生成
-   - 必要情報: `OPENAI_API_KEY`, `OPENAI_MODEL`
-   - 画像生成はMVPでは必須ではありません。今回は素材DBの組み合わせ提案が中心です。
+- **Node.js**: >= 18.0.0 (推奨: v20.x LTS)
+- **npm**: >= 9.x
+- **データベース**: PostgreSQL >= 14 (または Supabase)
 
-3. 画像ストレージ
-   - 用途: 柄画像、ロゴ、プレビュー画像、将来の試着用アセット保存
-   - 推奨: Cloudflare R2 または AWS S3
-   - 必要情報: `STORAGE_BUCKET`, `STORAGE_PUBLIC_BASE_URL`, `STORAGE_ACCESS_KEY_ID`, `STORAGE_SECRET_ACCESS_KEY`, `STORAGE_ENDPOINT`
+---
 
-4. 問い合わせ通知
-   - 用途: 問い合わせが入った時のメール通知
-   - 必要情報: `CONTACT_TO_EMAIL`, SMTP設定、または SendGrid/Resend などのAPIキー
+## 🛠 ローカル環境構築手順
 
-## あるとよいもの
+### Step 1: プロジェクトのクローンと依存関係のインストール
+```bash
+git clone <repository-url>
+cd オリジナルかりゆしウェアデザイン開発システム
+npm install
+```
 
-- 会社ロゴアップロード用の保存先
-- 管理者ログイン用の認証設定
-- テスト用スプレッドシートまたはテスト用Supabaseプロジェクト
-- デモ用の柄画像一式
-- 3D試着を強化する場合のGLBモデル、または簡易アバター画像
+### Step 2: 環境変数の設定
+`.env.example` から `.env` を作成します。
+```bash
+cp .env.example .env
+```
+開発・試作モードでは以下の値で動作します。
+```env
+VITE_APP_MODE=mock
+VITE_APP_BASE_URL=http://localhost:3000
+```
 
-## 今回のローカル構成
+### Step 3: ローカル開発サーバーの起動 (Vite)
+```bash
+npm run dev
+```
+ブラウザで `http://localhost:3000` を開き、動作を確認します。
 
-- `scripts/config.js`: API接続先・保存キーなどの設定
-- `scripts/mock-db.js`: 素材DBのモックデータ
-- `scripts/api-client.js`: 将来のバックエンドAPI差し替え口
-- `scripts/renderers.js`: 画面描画
-- `scripts/app.js`: アプリ制御
-- `db/schema.sql`: Supabase/PostgreSQL向けの初期スキーマ案
+---
 
-## 実運用化するときの差し替え方
+## 📦 各スクリプトの役割
 
-1. `scripts/api-client.js` の各メソッドを `fetch()` 経由のAPI呼び出しへ変更
-2. `db/schema.sql` をSupabaseに適用
-3. `patterns.asset_path` に画像ストレージのパスを登録
-4. OpenAI APIで `generateDesigns` のコンセプト文とタグ化を生成
-5. 問い合わせ保存後にメール通知を送信
+本システムは以下のスクリプトファイル群で協調動作します。
+
+- **`config.js`**: アプリケーション設定（アセットパス、アバター寸法などのデフォルト値）を保持。
+- **`mock-db.js`**: データベース未接続時に利用する配色・柄・アセットのモックデータを定義。
+- **`api-client.js`**: 疑似API通信モジュール。将来的に本番API（`/v1/*`）へ接続する際のインターフェースとなります。
+- **`renderers.js`**: HTMLテンプレートとSVGシャツ、サイズレポート等のレンダリングロジック。
+- **`design-store.js`**: デザインデータの永続化（localStorage）および、非推奨APIを排除した安全なBase64エンコードによる共有URL生成・復元。
+- **`fabric-editor.js`**: Fabric.jsを用いたロゴ画像（アップロード時のマジックバイト検証付き）およびカスタムテキスト配置キャンバス。
+- **`three-viewer.js`**: Three.jsを用いた3Dアバターとシャツモデルの描画、およびマウスドラッグによる回転制御、リサイズ時メモリ解放（dispose）処理。
+- **`app.js`**: メインエントリポイント。状態管理とイベントリスナー（安全なnullチェック付き）をバインド。
+
+---
+
+## 💾 本番データベース (Supabase) のセットアップ
+
+### 1. スキーマの適用
+`db/schema.sql` の内容を、Supabase の SQL Editor もしくはマイグレーションツールを用いて適用します。
+これにより、`users`、`design_sessions`、`patterns`、`palettes`、`estimates`、`inquiries` 等のテーブルが作成されます。
+
+### 2. RLS (Row Level Security) の設定
+Supabase 本番環境ではセキュリティのため、テーブルごとに適切なRLSポリシーを適用します。
+例: `inquiries` テーブルに対して匿名ロール (`anon`) での `INSERT` のみを許可し、`SELECT` は管理者または認証済みユーザーのみに制限します。
+
+```sql
+ALTER TABLE inquiries ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow anonymous insert for inquiries" 
+ON inquiries FOR INSERT 
+TO anon 
+WITH CHECK (true);
+```
+
+### 3. 初期データの投入
+`db/seed.sql` を実行し、カラーパレットや柄テンプレートの初期マスターデータをデータベースに投入します。

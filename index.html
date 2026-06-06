@@ -3,12 +3,20 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' cdn.jsdelivr.net cdnjs.cloudflare.com 'unsafe-inline'; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'">
     <title>Kariyushi Custom Studio — オリジナルかりゆしウェア デザイン開発</title>
     <meta name="description" content="沖縄のかりゆしウェアをオリジナルデザインで。条件入力からAI提案、柄編集、サイズ模型チェック、仕様書作成まで一貫サポート。">
+    <!-- OGP -->
+    <meta property="og:title" content="Kariyushi Custom Studio — オリジナルかりゆしウェア デザイン開発">
+    <meta property="og:description" content="沖縄のかりゆしウェアをオリジナルデザインで。条件入力からAI提案、柄編集、サイズ模型チェック、仕様書作成まで一貫サポート。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://kariyushi-custom.jp/">
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%2316727d'/><text x='50' y='72' font-size='60' font-weight='bold' fill='white' text-anchor='middle' font-family='sans-serif'>K</text></svg>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Playfair+Display:ital@1&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
@@ -172,12 +180,12 @@
             <legend>柄と数量</legend>
             <label class="field-label">主役モチーフ
               <select id="motifSelect">
-                <option>AIに任せる</option>
-                <option>ハイビスカス</option>
-                <option>シーサー</option>
-                <option>波模様</option>
-                <option>ヤシ葉</option>
-                <option>紅型風</option>
+                <option value="ai">AIに任せる</option>
+                <option value="hibiscus">ハイビスカス</option>
+                <option value="shisa">シーサー</option>
+                <option value="wave">波模様</option>
+                <option value="palm">ヤシ葉</option>
+                <option value="bingata">紅型風</option>
               </select>
             </label>
             <label class="field-label">予定枚数
@@ -243,9 +251,9 @@
             </label>
             <label class="field-label">衿型
               <select id="editCollar">
-                <option>開襟</option>
-                <option>ボタンダウン</option>
-                <option>スタンドカラー</option>
+                <option value="open">開襟</option>
+                <option value="button-down">ボタンダウン</option>
+                <option value="stand">スタンドカラー</option>
               </select>
             </label>
             <label class="field-label">ロゴ位置
@@ -258,9 +266,9 @@
             </label>
             <label class="field-label">ボタン
               <select id="editButton">
-                <option>黒蝶貝風</option>
-                <option>白蝶貝風</option>
-                <option>木目風</option>
+                <option value="black-shell">黒蝶貝風</option>
+                <option value="white-shell">白蝶貝風</option>
+                <option value="wood">木目風</option>
               </select>
             </label>
             <div id="designNotes" class="notes-box"></div>
@@ -291,11 +299,11 @@
             </label>
             <label class="field-label">フォント
               <select id="studioFont">
-                <option>Noto Sans JP</option>
-                <option>Playfair Display</option>
-                <option>Arial</option>
-                <option>Georgia</option>
-                <option>Impact</option>
+                <option value="Noto Sans JP">Noto Sans JP</option>
+                <option value="Playfair Display">Playfair Display</option>
+                <option value="Arial">Arial</option>
+                <option value="Georgia">Georgia</option>
+                <option value="Impact">Impact</option>
               </select>
             </label>
             <div class="measure-grid">
@@ -375,11 +383,11 @@
             </label>
             <label class="field-label">確認サイズ
               <select id="sizeSelect">
-                <option>S</option>
-                <option selected>M</option>
-                <option>L</option>
-                <option>LL</option>
-                <option>3L</option>
+                <option value="S">S</option>
+                <option value="M" selected>M</option>
+                <option value="L">L</option>
+                <option value="LL">LL</option>
+                <option value="3L">3L</option>
               </select>
             </label>
             <div id="fitReport" class="fit-report"></div>
@@ -387,10 +395,10 @@
         </div>
       </section>
 
-      <!-- ═══ STEP 5: SPECIFICATION ═══ -->
+      <!-- ═══ STEP 6: SPECIFICATION ═══ -->
       <section id="order" class="section order-section">
         <div class="section-head">
-          <p class="eyebrow">Step 5 — Final Specification</p>
+          <p class="eyebrow">Step 6 — Final Specification</p>
           <h2>発注前の確認用仕様書</h2>
         </div>
         <div class="spec-layout">
@@ -398,13 +406,13 @@
           <form id="contactForm" class="contact-form">
             <div class="panel-title">お問い合わせ</div>
             <label class="field-label">お名前・会社名
-              <input required type="text" placeholder="例：沖縄サンプルホテル">
+              <input required type="text" name="company" placeholder="例：沖縄サンプルホテル">
             </label>
             <label class="field-label">メールアドレス
-              <input required type="email" placeholder="example@example.com">
+              <input required type="email" name="email" placeholder="example@example.com">
             </label>
             <label class="field-label">相談内容
-              <textarea rows="4" placeholder="納期、必要枚数、ロゴデータの有無など"></textarea>
+              <textarea rows="4" name="message" placeholder="納期、必要枚数、ロゴデータの有無など"></textarea>
             </label>
             <button class="button primary wide" type="submit">仕様内容を保存する</button>
             <p id="contactStatus" class="status" role="status"></p>
@@ -447,13 +455,13 @@
       </div>
     </footer>
 
-    <script src="scripts/config.js"></script>
-    <script src="scripts/mock-db.js"></script>
-    <script src="scripts/api-client.js"></script>
-    <script src="scripts/renderers.js"></script>
-    <script src="scripts/design-store.js"></script>
-    <script src="scripts/fabric-editor.js"></script>
-    <script src="scripts/three-viewer.js"></script>
-    <script src="scripts/app.js"></script>
+    <script src="scripts/config.js" defer></script>
+    <script src="scripts/mock-db.js" defer></script>
+    <script src="scripts/api-client.js" defer></script>
+    <script src="scripts/renderers.js" defer></script>
+    <script src="scripts/design-store.js" defer></script>
+    <script src="scripts/fabric-editor.js" defer></script>
+    <script src="scripts/three-viewer.js" defer></script>
+    <script src="scripts/app.js" defer></script>
   </body>
 </html>

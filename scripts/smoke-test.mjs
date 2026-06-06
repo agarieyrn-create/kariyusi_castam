@@ -13,11 +13,11 @@ function mustExist(relativePath, label = relativePath) {
 }
 
 const html = read("index.html");
-const scriptFiles = [...html.matchAll(/<script\s+src="([^"]+)"/g)].map((match) => match[1]);
-const stylesheetFiles = [...html.matchAll(/<link\s+rel="stylesheet"\s+href="([^"]+)"/g)].map((match) => match[1]);
+const scriptFiles = [...html.matchAll(/<script\s+[^>]*src="([^"]+)"/g)].map((match) => match[1]);
+const stylesheetFiles = [...html.matchAll(/<link\s+[^>]*href="([^"]+)"/g)].map((match) => match[1]);
 
 for (const file of [...scriptFiles, ...stylesheetFiles]) {
-  if (!/^https?:\/\//.test(file)) mustExist(file, "HTML参照ファイル");
+  if (!/^(https?|data):/.test(file)) mustExist(file, "HTML参照ファイル");
 }
 
 const mockDb = read("scripts/mock-db.js");

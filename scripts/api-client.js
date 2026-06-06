@@ -19,6 +19,9 @@
   }
 
   function uid(prefix) {
+    if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+      return `${prefix}_${crypto.randomUUID()}`;
+    }
     return `${prefix}_${Date.now()}_${Math.random().toString(16).slice(2)}`;
   }
 
@@ -26,8 +29,10 @@
     let score = 0;
     if (brief.motif !== "AIに任せる" && pattern.motifs.includes(brief.motif)) score += 6;
     if (brief.mood === "上品") score += pattern.formal;
-    if (brief.mood === "伝統的") score += pattern.okinawa;
-    if (brief.mood === "大胆") score += pattern.bold;
+    else if (brief.mood === "伝統的") score += pattern.okinawa;
+    else if (brief.mood === "大胆") score += pattern.bold;
+    else score += Math.floor((pattern.formal + pattern.okinawa + pattern.bold) / 3); // デフォルトスコア
+
     if (lane.id === "uniform") score += pattern.formal;
     if (lane.id === "heritage") score += pattern.okinawa;
     if (lane.id === "resort") score += pattern.bold;
@@ -106,11 +111,12 @@
     }
 
     async saveInquiry(payload) {
+      const { id, createdAt, status, ...rest } = payload || {};
       const inquiry = {
         id: uid("inquiry"),
         createdAt: new Date().toISOString(),
         status: "saved",
-        ...payload
+        ...rest
       };
       const inquiries = readJson(this.config.storageKeys.inquiries, []);
       inquiries.unshift(inquiry);
