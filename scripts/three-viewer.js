@@ -69,6 +69,47 @@
 
   // ビューアングル（ラジアン）
   const VIEW_ANGLE_MAP = { front: 0, side: Math.PI / 2, back: Math.PI };
+  const IDLE_SWAY_AMPLITUDE = 0.14;
+  const IDLE_SWAY_SPEED = 0.00055;
+  const LOOKAT_LERP = 0.1;
+  const ENVIRONMENT_PRESETS = {
+    atelier: {
+      background: "#e8efe9",
+      hemisphere: ["#fffef7", "#c4d8cf", 1.6],
+      key: ["#fff5dc", 2.3, [3.5, 6.2, 4.5]],
+      fill: ["#d5f2ee", 1.0, [-4.4, 3.2, 2.8]],
+      rim: ["#ffd79b", 0.62, [0.5, 2.2, -5.2]],
+      floor: "#dbe6e0",
+      ring: "#c89b3c",
+      exposure: 1.12
+    },
+    resort: {
+      background: "#dff1f4",
+      hemisphere: ["#fcffff", "#a8dbe0", 1.75],
+      key: ["#fff8ea", 2.5, [4.2, 5.8, 4.8]],
+      fill: ["#8fdbe3", 1.12, [-4.2, 3.5, 3.1]],
+      rim: ["#ffe4ba", 0.72, [0.2, 1.8, -5.4]],
+      floor: "#d2eaec",
+      ring: "#0f766e",
+      exposure: 1.18
+    },
+    night: {
+      background: "#0f1924",
+      hemisphere: ["#d7e2ff", "#132536", 0.9],
+      key: ["#dfe8ff", 1.7, [3.2, 4.8, 4.6]],
+      fill: ["#315f82", 0.55, [-4.2, 2.5, 2.2]],
+      rim: ["#f3c36f", 0.9, [0.2, 2.4, -5.7]],
+      floor: "#162533",
+      ring: "#c89b3c",
+      exposure: 0.92
+    }
+  };
+  const FOCUS_PRESETS = {
+    full: { zoom: DEFAULT_ZOOM, lookAt: [0, CAMERA_LOOK_AT_Y, 0], angleOffset: 0 },
+    collar: { zoom: 4.35, lookAt: [0, 2.48, 0.18], angleOffset: 0.04 },
+    logo: { zoom: 4.55, lookAt: [0.18, 2.18, 0.26], angleOffset: 0.08 },
+    sleeve: { zoom: 4.75, lookAt: [-0.46, 2.16, 0.1], angleOffset: -0.36 }
+  };
 
   // リサイズ最小サイズ
   const MIN_CANVAS_WIDTH = 320;
@@ -88,12 +129,24 @@
     canvas: null,
     currentAngle: 0,
     targetAngle: 0,
+    baseAngle: 0,
+    focusAngleOffset: 0,
     zoom: DEFAULT_ZOOM,
     dragState: null,
     lastPayload: null,
     animationFrameId: 0,
     isBodyVisible: true,
     isAnimating: false,
+    environment: "atelier",
+    focus: "full",
+    currentLookAt: new THREE.Vector3(0, CAMERA_LOOK_AT_Y, 0),
+    targetLookAt: new THREE.Vector3(0, CAMERA_LOOK_AT_Y, 0),
+    hemiLight: null,
+    keyLight: null,
+    fillLight: null,
+    rimLight: null,
+    floorMesh: null,
+    floorRing: null,
   };
 
   /* ═══════════════════════════════════════════════════
@@ -320,6 +373,49 @@
     ctx.restore();
   }
 
+  function applyEnvironment(name = "atelier") {
+    const preset = ENVIRONMENT_PRESETS[name] || ENVIRONMENT_PRESETS.atelier;
+    viewerState.environment = name;
+    if (!viewerState.scene) return;
+    viewerState.scene.background = new THREE.Color(preset.background);
+    if (viewerState.hemiLight) {
+      viewerState.hemiLight.color = new THREE.Color(preset.hemisphere[0]);
+      viewerState.hemiLight.groundColor = new THREE.Color(preset.hemisphere[1]);
+      viewerState.hemiLight.intensity = preset.hemisphere[2];
+    }
+    if (viewerState.keyLight) {
+      viewerState.keyLight.color = new THREE.Color(preset.key[0]);
+      viewerState.keyLight.intensity = preset.key[1];
+      viewerState.keyLight.position.set(...preset.key[2]);
+    }
+    if (viewerState.fillLight) {
+      viewerState.fillLight.color = new THREE.Color(preset.fill[0]);
+      viewerState.fillLight.intensity = preset.fill[1];
+      viewerState.fillLight.position.set(...preset.fill[2]);
+    }
+    if (viewerState.rimLight) {
+      viewerState.rimLight.color = new THREE.Color(preset.rim[0]);
+      viewerState.rimLight.intensity = preset.rim[1];
+      viewerState.rimLight.position.set(...preset.rim[2]);
+    }
+    if (viewerState.floorMesh?.material) viewerState.floorMesh.material.color = new THREE.Color(preset.floor);
+    if (viewerState.floorRing?.material) viewerState.floorRing.material.color = new THREE.Color(preset.ring);
+    if (viewerState.renderer) viewerState.renderer.toneMappingExposure = preset.exposure;
+  }
+
+  function setBaseAngle(angle) {
+    viewerState.baseAngle = angle;
+    viewerState.targetAngle = angle;
+  }
+
+  function applyFocus(name = "full") {
+    const preset = FOCUS_PRESETS[name] || FOCUS_PRESETS.full;
+    viewerState.focus = name;
+    viewerState.zoom = preset.zoom;
+    viewerState.focusAngleOffset = preset.angleOffset || 0;
+    viewerState.targetLookAt.set(...preset.lookAt);
+  }
+
   /* ═══════════════════════════════════════════════════
    * シーン初期化
    * ═══════════════════════════════════════════════════ */
@@ -338,6 +434,8 @@
     viewerState.canvas = canvas;
     viewerState.scene = new THREE.Scene();
     viewerState.scene.background = new THREE.Color("#e4efe8");
+    viewerState.currentLookAt.set(0, CAMERA_LOOK_AT_Y, 0);
+    viewerState.targetLookAt.set(0, CAMERA_LOOK_AT_Y, 0);
 
     viewerState.camera = new THREE.PerspectiveCamera(CAMERA_FOV, 1, CAMERA_NEAR, CAMERA_FAR);
     viewerState.camera.position.set(0, CAMERA_DEFAULT_Y, viewerState.zoom);
@@ -362,39 +460,42 @@
     viewerState.renderer.toneMappingExposure = TONE_MAPPING_EXPOSURE;
 
     // ── ライティング設定 ──
-    viewerState.scene.add(new THREE.HemisphereLight("#fff", "#bdd4c8", HEMISPHERE_LIGHT_INTENSITY));
+    viewerState.hemiLight = new THREE.HemisphereLight("#fff", "#bdd4c8", HEMISPHERE_LIGHT_INTENSITY);
+    viewerState.scene.add(viewerState.hemiLight);
 
-    const keyLight = new THREE.DirectionalLight("#fffef5", KEY_LIGHT_INTENSITY);
-    keyLight.position.set(3, 6, 4);
-    keyLight.castShadow = true;
-    keyLight.shadow.mapSize.set(SHADOW_MAP_SIZE, SHADOW_MAP_SIZE);
-    viewerState.scene.add(keyLight);
+    viewerState.keyLight = new THREE.DirectionalLight("#fffef5", KEY_LIGHT_INTENSITY);
+    viewerState.keyLight.position.set(3, 6, 4);
+    viewerState.keyLight.castShadow = true;
+    viewerState.keyLight.shadow.mapSize.set(SHADOW_MAP_SIZE, SHADOW_MAP_SIZE);
+    viewerState.scene.add(viewerState.keyLight);
 
-    const fillLight = new THREE.DirectionalLight("#d4f0ed", FILL_LIGHT_INTENSITY);
-    fillLight.position.set(-4, 3, 2);
-    viewerState.scene.add(fillLight);
+    viewerState.fillLight = new THREE.DirectionalLight("#d4f0ed", FILL_LIGHT_INTENSITY);
+    viewerState.fillLight.position.set(-4, 3, 2);
+    viewerState.scene.add(viewerState.fillLight);
 
-    const rimLight = new THREE.DirectionalLight("#ffecd2", RIM_LIGHT_INTENSITY);
-    rimLight.position.set(0, 2, -5);
-    viewerState.scene.add(rimLight);
+    viewerState.rimLight = new THREE.DirectionalLight("#ffecd2", RIM_LIGHT_INTENSITY);
+    viewerState.rimLight.position.set(0, 2, -5);
+    viewerState.scene.add(viewerState.rimLight);
 
     // ── フロア（展示台） ──
-    const floorMesh = new THREE.Mesh(
+    viewerState.floorMesh = new THREE.Mesh(
       new THREE.CircleGeometry(FLOOR_RADIUS, FLOOR_SEGMENTS),
       new THREE.MeshStandardMaterial({ color: "#d5e2dc", roughness: 0.9 })
     );
-    floorMesh.rotation.x = -Math.PI / 2;
-    floorMesh.position.y = -0.02;
-    floorMesh.receiveShadow = true;
-    viewerState.scene.add(floorMesh);
+    viewerState.floorMesh.rotation.x = -Math.PI / 2;
+    viewerState.floorMesh.position.y = -0.02;
+    viewerState.floorMesh.receiveShadow = true;
+    viewerState.scene.add(viewerState.floorMesh);
 
-    const floorRing = new THREE.Mesh(
+    viewerState.floorRing = new THREE.Mesh(
       new THREE.TorusGeometry(FLOOR_RING_RADIUS, FLOOR_RING_TUBE, 8, 120),
       new THREE.MeshStandardMaterial({ color: "#16727d", roughness: 0.5 })
     );
-    floorRing.rotation.x = -Math.PI / 2;
-    floorRing.position.y = -0.01;
-    viewerState.scene.add(floorRing);
+    viewerState.floorRing.rotation.x = -Math.PI / 2;
+    viewerState.floorRing.position.y = -0.01;
+    viewerState.scene.add(viewerState.floorRing);
+
+    applyEnvironment(viewerState.environment);
 
     viewerState.rootGroup = new THREE.Group();
     viewerState.scene.add(viewerState.rootGroup);
@@ -413,16 +514,17 @@
    */
   function bindControls(canvas) {
     canvas.addEventListener("pointerdown", (event) => {
-      viewerState.dragState = { startX: event.clientX, startAngle: viewerState.targetAngle };
+      viewerState.dragState = { startX: event.clientX, startAngle: viewerState.baseAngle };
       canvas.setPointerCapture(event.pointerId);
       canvas.style.cursor = "grabbing";
     });
 
     canvas.addEventListener("pointermove", (event) => {
       if (viewerState.dragState) {
-        viewerState.targetAngle =
+        viewerState.baseAngle =
           viewerState.dragState.startAngle +
           (event.clientX - viewerState.dragState.startX) * DRAG_ROTATION_SENSITIVITY;
+        viewerState.targetAngle = viewerState.baseAngle + viewerState.focusAngleOffset;
       }
     });
 
@@ -1002,13 +1104,18 @@
 
     if (!viewerState.renderer) return;
 
-    // ズームのスムーズ補間
+    // ズームと注視点のスムーズ補間
     viewerState.camera.position.z +=
       (viewerState.zoom - viewerState.camera.position.z) * CAMERA_ZOOM_LERP;
-    viewerState.camera.lookAt(0, CAMERA_LOOK_AT_Y, 0);
+    viewerState.currentLookAt.lerp(viewerState.targetLookAt, LOOKAT_LERP);
+    viewerState.camera.lookAt(viewerState.currentLookAt);
 
-    // 回転のスムーズ補間
+    // 回転のスムーズ補間 + 待機時のゆらぎ演出
     if (viewerState.rootGroup) {
+      const idleOffset = !viewerState.dragState && viewerState.focus === "full"
+        ? Math.sin(Date.now() * IDLE_SWAY_SPEED) * IDLE_SWAY_AMPLITUDE
+        : 0;
+      viewerState.targetAngle = viewerState.baseAngle + viewerState.focusAngleOffset + idleOffset;
       viewerState.currentAngle +=
         (viewerState.targetAngle - viewerState.currentAngle) * ROTATION_LERP;
       viewerState.rootGroup.rotation.y = viewerState.currentAngle;
@@ -1085,11 +1192,15 @@
         viewerState.rootGroup.add(createFitGuides(fit));
       }
 
+      applyEnvironment(model.environment || viewerState.environment || "atelier");
+      applyFocus(model.focus || viewerState.focus || "full");
+
       // ビューアングル設定
-      viewerState.targetAngle = VIEW_ANGLE_MAP[model.view] !== undefined
+      const baseAngle = VIEW_ANGLE_MAP[model.view] !== undefined
         ? VIEW_ANGLE_MAP[model.view]
         : THREE.MathUtils.degToRad(((Number(model.rotation) || 0) % 360 + 360) % 360);
-      viewerState.currentAngle = viewerState.targetAngle;
+      setBaseAngle(baseAngle);
+      viewerState.currentAngle = viewerState.baseAngle + viewerState.focusAngleOffset;
 
       resizeCanvas();
       console.log("[3D] rebuild complete");
@@ -1128,11 +1239,21 @@
 
   window.KariyushiThreeViewer = {
     rebuild,
+    setEnvironment(name) {
+      applyEnvironment(name);
+    },
+    setFocus(name) {
+      applyFocus(name);
+    },
     toggleBody() {
       viewerState.isBodyVisible = !viewerState.isBodyVisible;
       if (viewerState.mannequinGroup) {
         viewerState.mannequinGroup.visible = viewerState.isBodyVisible;
       }
+      return viewerState.isBodyVisible;
+    },
+    isBodyVisible() {
+      return viewerState.isBodyVisible;
     },
     cleanup,
   };

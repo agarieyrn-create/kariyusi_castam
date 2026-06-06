@@ -12,7 +12,7 @@
     proposals: [],
     selectedId: "",
     edit: { ...config.defaultEdit },
-    model: { ...config.defaultModel },
+    model: { ...config.defaultModel, environment: "atelier", focus: "full" },
     estimate: null,
     assetLimit: config.performance?.initialAssetLimit || 24
   };
@@ -84,14 +84,34 @@
     });
   }
 
-  function syncModelSegments() {
+  function syncViewSegments() {
     const rotation = ((Number(state.model.rotation) || 0) % 360 + 360) % 360;
     const targets = { front: 0, side: 90, back: 180 };
-    document.querySelectorAll(".segment").forEach((button) => {
+    document.querySelectorAll("#viewSegments .segment").forEach((button) => {
       const target = targets[button.dataset.view];
       const diff = Math.abs(((rotation - target + 540) % 360) - 180);
-      if (button.dataset.view) button.classList.toggle("selected", diff <= 12);
+      button.classList.toggle("selected", diff <= 20);
     });
+  }
+
+  function syncEnvironmentSegments() {
+    document.querySelectorAll("#environmentSegments .segment").forEach((button) => {
+      button.classList.toggle("selected", button.dataset.env === state.model.environment);
+    });
+  }
+
+  function syncFocusSegments() {
+    document.querySelectorAll("#focusSegments .segment").forEach((button) => {
+      button.classList.toggle("selected", button.dataset.focus === state.model.focus);
+    });
+  }
+
+  function syncBodyToggle() {
+    const toggle = document.getElementById("toggleBodyBtn");
+    if (!toggle) return;
+    const visible = window.KariyushiThreeViewer?.isBodyVisible?.() ?? true;
+    toggle.textContent = visible ? "BODY ON" : "BODY OFF";
+    toggle.classList.toggle("is-off", !visible);
   }
 
   function updateAIAssistant() {
@@ -157,8 +177,11 @@
     };
     window.dispatchEvent(new CustomEvent("kariyushi:render3d", { detail: window.KariyushiLatest3D }));
     syncInputs();
-    syncModelSegments();
+    syncViewSegments();
+    syncEnvironmentSegments();
+    syncFocusSegments();
     syncMannequinSegments();
+    syncBodyToggle();
   }
 
   async function generateDesigns() {
@@ -255,9 +278,26 @@
       renderAll();
     });
 
+    document.getElementById("environmentSegments")?.addEventListener("click", (event) => {
+      const button = event.target.closest(".segment");
+      if (!button) return;
+      state.model.environment = button.dataset.env || "atelier";
+      renderAll();
+    });
+
+    document.getElementById("focusSegments")?.addEventListener("click", (event) => {
+      const button = event.target.closest(".segment");
+      if (!button) return;
+      state.model.focus = button.dataset.focus || "full";
+      renderAll();
+    });
+
     // BODY ON/OFF
     document.getElementById("toggleBodyBtn")?.addEventListener("click", () => {
-      if (window.KariyushiThreeViewer) window.KariyushiThreeViewer.toggleBody();
+      if (window.KariyushiThreeViewer) {
+        window.KariyushiThreeViewer.toggleBody();
+        syncBodyToggle();
+      }
     });
 
     const modelPreview = document.getElementById("modelPreview");
@@ -330,7 +370,10 @@
       document.getElementById("proposals")?.scrollIntoView({ behavior: "smooth" });
     });
     document.getElementById("regenerate")?.addEventListener("click", generateDesigns);
-    document.getElementById("motifSelect")?.addEventListener("input", syncLiveBrief);
+    document.getElementById("motifSelect")?.addEventListener("input", () => {
+      syncLiveBrief();
+      updateAIAssistant();
+    });
     document.getElementById("proposalList")?.addEventListener("click", (event) => {
       const button = event.target.closest(".select-proposal");
       if (!button) return;
@@ -510,6 +553,7 @@
     setupForms();
     setupSiteMotion();
     setupDesignStudio();
+    syncBodyToggle();
     await generateDesigns();
   }
 

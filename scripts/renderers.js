@@ -3,6 +3,11 @@
 
   const yen = new Intl.NumberFormat("ja-JP");
   const logoLabels = { leftChest: "左胸", sleeve: "袖", back: "背面", none: "なし" };
+  const laneLabels = {
+    uniform: "Atelier Uniform",
+    resort: "Resort Showcase",
+    heritage: "Heritage Signature"
+  };
 
   function esc(value) {
     return String(value ?? "").replace(/[&<>"']/g, (char) => ({
@@ -154,13 +159,15 @@
     target.innerHTML = proposals.map((proposal) => {
       const asset = findAsset(assets, proposal.assetId);
       const score = designScore(proposal, proposal);
+      const isSelected = proposal.id === selectedId;
       return `
-        <article class="proposal-card ${proposal.id === selectedId ? "selected" : ""}">
+        <article class="proposal-card ${isSelected ? "selected" : ""}">
           <div class="proposal-visual">
             <div class="proposal-shirt">${shirtSvg(proposal, palettes, proposal, { assets, config })}</div>
             ${asset ? `<img ${imageAttrs(asset, config)} width="104" height="240">` : ""}
           </div>
           <div class="proposal-copy">
+            <span class="proposal-badge">${esc(laneLabels[proposal.lane] || "Signature Concept")}</span>
             <h3>${esc(proposal.title)}</h3>
             <p>${esc(proposal.direction)}</p>
             <div class="tags">${proposal.tags.map((tag) => `<span class="tag">${esc(tag)}</span>`).join("")}</div>
@@ -170,7 +177,7 @@
               <span><b>視認性</b><i style="--score:${score.visibility}%"></i><strong>${score.visibility}</strong></span>
             </div>
           </div>
-          <button class="button secondary wide select-proposal" type="button" data-id="${esc(proposal.id)}">この案を編集する</button>
+          <button class="button ${isSelected ? "primary aurora" : "secondary ghost-lux"} wide select-proposal" type="button" data-id="${esc(proposal.id)}">${isSelected ? "選択中の案" : "この案を編集する"}</button>
         </article>`;
     }).join("");
   }
@@ -314,8 +321,14 @@
   function renderDesignNotes(target, proposal, edit, assets) {
     const asset = findAsset(assets, edit.assetId || proposal.assetId);
     const score = designScore(proposal, edit);
+    const laneNarrative = {
+      uniform: "遠目には整い、近づくほど沖縄らしさが伝わる“制服向けの静かな華やぎ”を狙う方向です。",
+      resort: "写真映えと軽やかさを優先し、リゾートらしい解放感を前面に出す方向です。",
+      heritage: "記念品や周年案件にも耐える、伝統要素を主役にしたシグネチャー方向です。"
+    };
     target.innerHTML = `
       <strong>現在の設計メモ</strong>
+      <p class="note-story">${esc(laneNarrative[proposal.lane] || "ブランド感と実用性を両立する方向で設計しています。")} 参考素材は <b>${esc(asset?.title || "未選択")}</b> を基点に反映中です。</p>
       <ul>
         <li>案：${esc(proposal.title)}</li>
         <li>柄：${esc(proposal.pattern.name)} / 参考：${esc(asset?.title || "未選択")}</li>
@@ -330,15 +343,43 @@
   }
 
   function renderSpec(target, proposal, brief, edit, fit, estimate) {
+    const designId = `KD-${new Date().toISOString().slice(0,10).replace(/-/g, "")}-001`;
     target.innerHTML = `
       <div class="spec-header">
         <div class="spec-id">
           <span class="spec-label">Design ID</span>
-          <strong>KD-${new Date().toISOString().slice(0,10).replace(/-/g,"")}-001</strong>
+          <strong>${designId}</strong>
         </div>
         <div class="spec-id" style="text-align:right">
           <span class="spec-label">Date</span>
           <strong>${new Date().toLocaleDateString("ja-JP")}</strong>
+        </div>
+      </div>
+      <div class="spec-hero">
+        <span class="proposal-badge">Final Specification</span>
+        <h3>${esc(proposal.title)}</h3>
+        <p>用途 <b>${esc(brief.scene)}</b> に合わせて、<b>${esc(edit.palette)}</b> と <b>${esc(proposal.pattern.name)}</b> を軸に設計した最終候補です。</p>
+      </div>
+      <div class="spec-grid">
+        <div class="spec-block">
+          <span>デザイン条件</span>
+          <strong>${esc(brief.mood)} / ${esc(brief.motif)}</strong>
+          <small>編集時にさらに柄密度とロゴ配置を調整可能</small>
+        </div>
+        <div class="spec-block">
+          <span>ディテール</span>
+          <strong>${esc(edit.collar)} ・ ${esc(edit.button)}</strong>
+          <small>ロゴ位置 ${esc(logoLabels[edit.logo] || edit.logo)}</small>
+        </div>
+        <div class="spec-block">
+          <span>フィット確認</span>
+          <strong>推奨 ${esc(fit.recommendedSize)}</strong>
+          <small>胸ゆとり ${fit.chestEase > 0 ? "+" : ""}${fit.chestEase}cm / ${esc(fit.message)}</small>
+        </div>
+        <div class="spec-block">
+          <span>概算</span>
+          <strong>¥${yen.format(estimate.total)}</strong>
+          <small>${estimate.quantity}枚・単価 ¥${yen.format(estimate.unitPrice)}</small>
         </div>
       </div>
       <div class="spec-row"><span>用途</span><strong>${esc(brief.scene)}</strong></div>
@@ -348,6 +389,9 @@
       <div class="spec-row"><span>サイズ確認</span><strong>推奨 ${esc(fit.recommendedSize)} / 胸ゆとり ${fit.chestEase > 0 ? "+" : ""}${fit.chestEase}cm</strong></div>
       <div class="spec-row"><span>数量</span><strong>${estimate.quantity}枚</strong></div>
       <div class="spec-row spec-price"><span>概算</span><strong>単価 ¥${yen.format(estimate.unitPrice)} / 合計 ¥${yen.format(estimate.total)}</strong></div>
+      <div class="production-flow">
+        <span>AI提案</span><span>仕様調整</span><span>サンプル確認</span><span>本生産</span>
+      </div>
       <p class="spec-note">概算にはサンプル作成費 ¥${yen.format(estimate.samplePrice)}を含みます。正式見積りには生地、プリント方式、縫製仕様の確認が必要です。</p>`;
   }
 
