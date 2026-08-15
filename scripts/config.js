@@ -12,7 +12,8 @@
     storageKeys: {
       sessions: "kariyushi-design-sessions",
       inquiries: "kariyushi-design-inquiries",
-      selectedSession: "kariyushi-design-selected-session"
+      selectedSession: "kariyushi-design-selected-session",
+      configuration: "kariyushi-configuration"
     },
     storageLimits: {
       sessions: 20,
@@ -26,6 +27,23 @@
     performance: {
       initialAssetLimit: 24,
       assetPageSize: 24
+    },
+    priceRules: {
+      basePrice: 9800,
+      samplePrice: 18000,
+      longSleeveAdditionalPrice: 1000,
+      fabricAdditionalPrices: {
+        standard: 0,
+        premium: 800
+      },
+      logoPrintPrice: 900,
+      embroideryPrice: 1500,
+      namePrintPrice: 800,
+      quantityUnitPrices: [
+        { minQuantity: 200, unitPrice: 6900 },
+        { minQuantity: 100, unitPrice: 7600 },
+        { minQuantity: 50, unitPrice: 8600 }
+      ]
     },
     defaultBrief: {
       scene: "ホテル・店舗制服",

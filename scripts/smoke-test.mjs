@@ -15,26 +15,25 @@ function mustExist(relativePath, label = relativePath) {
 const html = read("index.html");
 const scriptFiles = [...html.matchAll(/<script\s+[^>]*src="([^"]+)"/g)].map((match) => match[1]);
 const stylesheetFiles = [...html.matchAll(/<link\s+[^>]*href="([^"]+)"/g)].map((match) => match[1]);
+const imageFiles = [...html.matchAll(/<img\s+[^>]*src="([^"]+)"/g)].map((match) => match[1]);
 
-for (const file of [...scriptFiles, ...stylesheetFiles]) {
+for (const file of [...scriptFiles, ...stylesheetFiles, ...imageFiles]) {
   if (!/^(https?|data):/.test(file)) mustExist(file, "HTML参照ファイル");
-}
-
-const mockDb = read("scripts/mock-db.js");
-const assetFiles = [...mockDb.matchAll(/asset\("[^"]+",\s*"([^"]+)"/g)].map((match) => match[1]);
-for (const file of assetFiles) {
-  mustExist(join("デザイン写真", file), "素材画像");
-}
-
-const config = read("scripts/config.js");
-const modelPhotoFiles = [...config.matchAll(/file:\s*"([^"]+\.jpg)"/g)].map((match) => match[1]);
-for (const file of modelPhotoFiles) {
-  mustExist(join("3Dモデル", file), "3Dモデル写真");
 }
 
 const renderers = read("scripts/renderers.js");
 if (!renderers.includes('loading="${loading}"') || !renderers.includes("load-more-assets")) {
   errors.push("画像遅延ロードまたは追加読み込みの実装が見つかりません。");
+}
+
+const designStore = read("scripts/design-store.js");
+if (!designStore.includes("window.KariyushiStore") || !designStore.includes("calculateEstimatedPrice")) {
+  errors.push("共通コンフィギュレーションまたは概算価格計算が見つかりません。");
+}
+
+const tryonStudio = read("scripts/tryon-studio.js");
+if (!tryonStudio.includes("fallbackSvgDataUrl") || !tryonStudio.includes("capturePreview")) {
+  errors.push("3D失敗時の2Dフォールバックまたはプレビュー保存機能が見つかりません。");
 }
 
 const fabricEditor = read("scripts/fabric-editor.js");
@@ -51,4 +50,4 @@ if (errors.length) {
   process.exit(1);
 }
 
-console.log(`Smoke test passed: ${scriptFiles.length} scripts, ${assetFiles.length} assets, ${modelPhotoFiles.length} model photos checked.`);
+console.log(`Smoke test passed: ${scriptFiles.length} scripts, ${imageFiles.length} active images checked.`);

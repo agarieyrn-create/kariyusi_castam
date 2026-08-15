@@ -76,4 +76,52 @@ describe("KariyushiDesignStore", () => {
     const loaded = store.loadFromUrl();
     expect(loaded).toBeNull();
   });
+
+  it("should keep configuration and estimate in one shared store", () => {
+    const sharedStore = global.window.KariyushiStore;
+    sharedStore.resetConfiguration();
+    const updated = sharedStore.updateConfiguration({
+      quantity: 100,
+      sleeveType: "long"
+    });
+
+    expect(updated.configuration.quantity).toBe(100);
+    expect(updated.configuration.sleeveType).toBe("long");
+    expect(updated.configuration.estimatedPrice).toBe(updated.priceBreakdown.total);
+    expect(updated.priceBreakdown.items.some((item) => item.label === "長袖オプション")).toBe(true);
+  });
+
+  it("should notify subscribers and dispatch a configuration event", () => {
+    const sharedStore = global.window.KariyushiStore;
+    const listener = vi.fn();
+    const dispatchEvent = vi.fn();
+    global.window.dispatchEvent = dispatchEvent;
+    global.window.CustomEvent = class {
+      constructor(type, init) {
+        this.type = type;
+        this.detail = init.detail;
+      }
+    };
+    const unsubscribe = sharedStore.subscribe(listener);
+
+    sharedStore.updateConfiguration({ quantity: 25 });
+
+    expect(listener).toHaveBeenCalledOnce();
+    expect(dispatchEvent.mock.calls[0][0].type).toBe("kariyushi:configurationchange");
+    expect(dispatchEvent.mock.calls[0][0].detail.configuration.quantity).toBe(25);
+    unsubscribe();
+  });
+
+  it("should calculate a transparent price breakdown", () => {
+    const result = global.window.KariyushiPricing.calculateEstimatedPrice({
+      quantity: 50,
+      sleeveType: "short",
+      fabricId: "standard"
+    });
+
+    expect(result.subtotal).toBe(50 * 9800 + 18000);
+    expect(result.discount).toBe(50 * (9800 - 8600));
+    expect(result.total).toBe(50 * 8600 + 18000);
+    expect(result.isEstimate).toBe(true);
+  });
 });

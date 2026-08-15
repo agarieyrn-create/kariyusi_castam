@@ -17,5 +17,7 @@ describe("KariyushiConfig", () => {
     expect(config.storageKeys.sessions).toBe("kariyushi-design-sessions");
     expect(config.upload.allowedLogoTypes).toContain("image/png");
     expect(config.defaultBrief.quantity).toBe(50);
+    expect(config.storageKeys.configuration).toBe("kariyushi-configuration");
+    expect(config.priceRules.quantityUnitPrices).toHaveLength(3);
   });
 });

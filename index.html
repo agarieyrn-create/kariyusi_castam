@@ -3,480 +3,833 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' cdn.jsdelivr.net cdnjs.cloudflare.com 'unsafe-inline'; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'">
-    <title>Kariyushi Custom Studio — オリジナルかりゆしウェア デザイン開発</title>
-    <meta name="description" content="沖縄のかりゆしウェアをオリジナルデザインで。条件入力からAI提案、柄編集、サイズ模型チェック、仕様書作成まで一貫サポート。">
-    <!-- OGP -->
-    <meta property="og:title" content="Kariyushi Custom Studio — オリジナルかりゆしウェア デザイン開発">
-    <meta property="og:description" content="沖縄のかりゆしウェアをオリジナルデザインで。条件入力からAI提案、柄編集、サイズ模型チェック、仕様書作成まで一貫サポート。">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' cdn.jsdelivr.net 'unsafe-inline'; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'">
+    <title>株式会社サンプルかりゆし | オリジナルかりゆしウェア制作</title>
+    <meta name="description" content="沖縄の企業・店舗・団体向けに、会社ロゴやカラーを反映したオリジナルかりゆしウェアを制作。メール・電話・LINEで相談できます。">
+    <meta property="og:title" content="会社の色を、かりゆしウェアに。">
+    <meta property="og:description" content="沖縄の企業・店舗・団体向けオリジナルかりゆしウェア制作。会社らしさが伝わるユニフォームをご相談ください。">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://kariyushi-custom.jp/">
-    <!-- Favicon -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%2316727d'/><text x='50' y='72' font-size='60' font-weight='bold' fill='white' text-anchor='middle' font-family='sans-serif'>K</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23123047'/%3E%3Ctext x='32' y='42' font-size='30' font-family='Arial,sans-serif' font-weight='700' text-anchor='middle' fill='white'%3EK%3C/text%3E%3C/svg%3E">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Cormorant+Garamond:wght@500;600;700&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js" crossorigin="anonymous"></script>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
-    <div class="page-noise" aria-hidden="true"></div>
-    <header class="app-header">
-      <div class="header-left">
+    <a class="skip-link" href="#main">本文へ移動</a>
+
+    <header class="site-header">
+      <div class="container header-inner">
         <a class="brand" href="#top" aria-label="トップへ戻る">
           <span class="brand-mark">K</span>
-          <div class="brand-text">
-            <div class="brand-title">Kariyushi Custom Studio</div>
-            <div class="brand-subtitle">Resort Couture Design Engine</div>
-          </div>
+          <span>
+            <strong data-company-name>株式会社サンプルかりゆし</strong>
+            <small>Original Kariyushi Wear</small>
+          </span>
         </a>
+
+        <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="siteNav">
+          <span></span>
+          <span></span>
+          <span></span>
+          <span class="sr-only">メニューを開閉</span>
+        </button>
+
+        <nav id="siteNav" class="site-nav" aria-label="主要メニュー">
+          <a href="#service">オリジナル制作</a>
+          <a href="#reason">選ばれる理由</a>
+          <a href="#patterns">制作パターン</a>
+          <a href="#tryon">3D試着</a>
+          <a href="#scenes">活用シーン</a>
+          <a href="#cases">制作事例</a>
+          <a href="#flow">制作の流れ</a>
+          <a href="#faq">よくある質問</a>
+          <a href="#contact">お問い合わせ</a>
+        </nav>
+
+        <a class="header-cta" href="#contact">制作を相談する</a>
       </div>
-      <nav class="nav step-nav" aria-label="主要メニュー">
-        <a href="#brief" class="step-link active"><span class="step-num">1</span> 条件入力</a>
-        <div class="step-divider"></div>
-        <a href="#proposals" class="step-link"><span class="step-num">2</span> 提案比較</a>
-        <div class="step-divider"></div>
-        <a href="#editor" class="step-link"><span class="step-num">3</span> 柄編集</a>
-        <div class="step-divider"></div>
-        <a href="#design-studio" class="step-link"><span class="step-num">4</span> ロゴ配置</a>
-        <div class="step-divider"></div>
-        <a href="#model-check" class="step-link"><span class="step-num">5</span> 3D確認</a>
-        <div class="step-divider"></div>
-        <a href="#order" class="step-link"><span class="step-num">6</span> 注文確認</a>
-      </nav>
     </header>
 
-    <main>
-      <!-- ═══ HERO ═══ -->
-      <section id="top" class="hero section premium-hero">
-        <div class="hero-copy">
-          <div class="hero-kickers">
-            <span class="eyebrow">Original Kariyushi Wear Planner</span>
-            <span class="hero-chip">AI提案 / 3D確認 / 仕様書化</span>
-          </div>
-          <h1>沖縄の風景を、<span class="hero-accent">装いの意匠</span>へ。</h1>
-          <p class="lead hero-lead">
-            ホテル、リゾート、物販、記念品。用途と世界観を選ぶだけで、
-            AI提案・編集・3D試着・仕様確認までを一続きのラグジュアリー体験として設計します。
-          </p>
-          <div class="hero-actions">
-            <a class="button primary aurora" href="#brief">デザインを始める</a>
-            <a class="button secondary ghost-lux" href="#model-check">3Dショーケースを見る</a>
-          </div>
-          <div class="hero-stats">
-            <div>
-              <span>Design Flow</span>
-              <strong>6 Steps</strong>
+    <main id="main">
+      <section id="top" class="hero section">
+        <div class="container hero-grid">
+          <div class="hero-copy reveal">
+            <p class="eyebrow">沖縄県内の企業・店舗・団体向け</p>
+            <h1>会社の色を、<span>かりゆしウェアに。</span></h1>
+            <p class="hero-lead">
+              沖縄の企業・店舗・団体向けに、オリジナルかりゆしウェアを制作。
+              既製品では出せない、会社らしさをデザインします。
+            </p>
+            <div class="hero-actions">
+              <a class="button button-primary" href="#contact">オリジナル制作を相談する</a>
+              <a class="button button-line" href="#" data-line-link>LINEで気軽に相談する</a>
             </div>
-            <div>
-              <span>Creative Output</span>
-              <strong>3 Concepts</strong>
-            </div>
-            <div>
-              <span>Preview</span>
-              <strong>2D / 3D</strong>
-            </div>
+            <p class="microcopy">デザインが決まっていなくても大丈夫です。枚数・納期・費用感からご相談いただけます。</p>
+            <ul class="trust-badges" aria-label="対応内容">
+              <li>沖縄県内対応</li>
+              <li>会社ロゴ対応</li>
+              <li>カラー相談OK</li>
+              <li>注文予約OK</li>
+              <li>メール・電話・LINE対応</li>
+            </ul>
           </div>
-          <div class="live-brief live-brief-premium" aria-label="現在の設計条件">
-            <div>
-              <span>用途</span>
-              <strong id="liveScene">ホテル・店舗制服</strong>
-            </div>
-            <div>
-              <span>印象</span>
-              <strong id="liveMood">上品</strong>
-            </div>
-            <div>
-              <span>柄</span>
-              <strong id="liveMotif">AIに任せる</strong>
-            </div>
-          </div>
-        </div>
-        <div class="hero-workbench premium-workbench" aria-label="かりゆしウェアの設計プレビュー">
-          <div class="hero-card main-preview hero-stage">
-            <div class="hero-stage-copy">
-              <p>Featured Preview</p>
-              <strong>Resort Uniform Capsule</strong>
-            </div>
-            <div id="heroPreview"></div>
-            <div class="hero-stage-footer">
-              <span>Crafted in Okinawa-inspired tones</span>
-              <span>3D fitting ready</span>
-            </div>
-          </div>
-          <div class="hero-card metrics-card glass-card">
-            <span>推奨サイズ</span>
-            <strong id="heroSize">M</strong>
-            <small id="heroFit">標準的なゆとり</small>
-          </div>
-          <div class="hero-card swatch-card glass-card">
-            <span>現在の配色</span>
-            <div id="heroSwatches" class="mini-swatches"></div>
-          </div>
-          <div class="hero-card atelier-card">
-            <span>Atelier Note</span>
-            <strong>深海ネイビー、砂浜アイボリー、琥珀の光沢。</strong>
-            <small>質感・余白・陰影で“上質な制服体験”を演出します。</small>
-          </div>
-        </div>
-      </section>
 
-      <section class="section trust-band" aria-label="サービス特徴">
-        <div class="trust-band-inner">
-          <div class="trust-item"><strong>01</strong><span>AI提案と人の感性をつなぐ設計フロー</span></div>
-          <div class="trust-item"><strong>02</strong><span>Fabric.jsによるロゴ・タイポの自由配置</span></div>
-          <div class="trust-item"><strong>03</strong><span>Three.jsで着用感と印象を360°確認</span></div>
-          <div class="trust-item"><strong>04</strong><span>仕様書・見積り・相談導線まで一画面で完結</span></div>
-        </div>
-      </section>
-
-      <!-- ═══ HOW TO USE ═══ -->
-      <section id="how-to" class="section how-to-section">
-        <div class="section-head luxury-head center">
-          <p class="eyebrow">Creative Flow</p>
-          <h2>感性と実務をつなぐ、6つの制作ステップ</h2>
-          <p class="section-lead">ただ入力するのではなく、世界観を選び、磨き、確認していく体験に再設計しました。</p>
-        </div>
-        <div class="how-to-grid how-to-grid-6">
-          <div class="how-to-card"><div class="how-to-num">1</div><div class="how-to-icon">✦</div><h3>条件を定める</h3><p>用途、印象、配色、モチーフを選択し、デザインの軸をつくります。</p></div>
-          <div class="how-to-card"><div class="how-to-num">2</div><div class="how-to-icon">◌</div><h3>提案を比較する</h3><p>編集しやすい3案を、方向性とスコア付きで比べて選べます。</p></div>
-          <div class="how-to-card"><div class="how-to-num">3</div><div class="how-to-icon">✧</div><h3>柄と配色を磨く</h3><p>密度、スケール、襟、ボタンなどを上質な印象に整えます。</p></div>
-          <div class="how-to-card"><div class="how-to-num">4</div><div class="how-to-icon">◇</div><h3>ロゴを載せる</h3><p>ブランドロゴや文字を、2Dキャンバス上で自由に構成できます。</p></div>
-          <div class="how-to-card"><div class="how-to-num">5</div><div class="how-to-icon">◎</div><h3>3Dで確かめる</h3><p>着丈や身幅だけでなく、光環境と角度による見え方も確認できます。</p></div>
-          <div class="how-to-card"><div class="how-to-num">6</div><div class="how-to-icon">▣</div><h3>仕様を固める</h3><p>最後はオーダーシート感覚で確認し、そのまま相談へ進めます。</p></div>
-        </div>
-      </section>
-
-      <!-- ═══ STEP 1: DESIGN BRIEF ═══ -->
-      <section id="brief" class="section section-surface">
-        <div class="section-head luxury-head">
-          <p class="eyebrow">Step 1 — Design Brief</p>
-          <h2>用途と世界観を選び、最初の方向性をつくる</h2>
-          <p class="section-lead">入力フォームではなく、アトリエでサンプルを選ぶ感覚で設計条件を決めます。</p>
-        </div>
-        <form id="briefForm" class="brief-grid premium-form-grid">
-          <fieldset>
-            <legend>使用シーン</legend>
-            <div class="choice-grid" data-name="scene">
-              <button type="button" class="choice selected" data-value="ホテル・店舗制服">ホテル・店舗制服</button>
-              <button type="button" class="choice" data-value="仕事">仕事</button>
-              <button type="button" class="choice" data-value="イベント・式典">イベント・式典</button>
-              <button type="button" class="choice" data-value="観光・物販">観光・物販</button>
-              <button type="button" class="choice" data-value="チームウェア">チームウェア</button>
-            </div>
-          </fieldset>
-
-          <fieldset>
-            <legend>見せたい印象</legend>
-            <div class="choice-grid" data-name="mood">
-              <button type="button" class="choice selected" data-value="上品">上品</button>
-              <button type="button" class="choice" data-value="伝統的">伝統的</button>
-              <button type="button" class="choice" data-value="リゾート">リゾート</button>
-              <button type="button" class="choice" data-value="現代的">現代的</button>
-              <button type="button" class="choice" data-value="大胆">大胆</button>
-            </div>
-          </fieldset>
-
-          <fieldset>
-            <legend>基本色</legend>
-            <div class="choice-grid swatches" data-name="palette">
-              <button type="button" class="choice selected" data-value="海風ブルー"><span style="--swatch:#1c7f93"></span>海風ブルー</button>
-              <button type="button" class="choice" data-value="月桃ホワイト"><span style="--swatch:#f8f5e9"></span>月桃ホワイト</button>
-              <button type="button" class="choice" data-value="琉球レッド"><span style="--swatch:#c94f49"></span>琉球レッド</button>
-              <button type="button" class="choice" data-value="夜海ブラック"><span style="--swatch:#172326"></span>夜海ブラック</button>
-              <button type="button" class="choice" data-value="若葉グリーン"><span style="--swatch:#5f8f61"></span>若葉グリーン</button>
-            </div>
-          </fieldset>
-
-          <fieldset>
-            <legend>柄と数量</legend>
-            <label class="field-label">主役モチーフ
-              <select id="motifSelect">
-                <option value="ai">AIに任せる</option>
-                <option value="hibiscus">ハイビスカス</option>
-                <option value="shisa">シーサー</option>
-                <option value="wave">波模様</option>
-                <option value="palm">ヤシ葉</option>
-                <option value="bingata">紅型風</option>
-              </select>
-            </label>
-            <label class="field-label">予定枚数
-              <input id="quantityInput" type="number" min="10" max="1000" step="10" value="50">
-            </label>
-          </fieldset>
-
-          <button class="button primary wide aurora" type="submit">AIに3案を依頼する</button>
-        </form>
-      </section>
-
-      <!-- ═══ STEP 2: PROPOSALS ═══ -->
-      <section id="proposals" class="section muted-section gallery-section">
-        <div class="section-head row luxury-head">
-          <div>
-            <p class="eyebrow">Step 2 — AI Proposals</p>
-            <h2>比較表ではなく、選びたくなる提案ギャラリーへ</h2>
-            <p class="section-lead">世界観の違う3案を編集的に比較し、もっとも近い方向性から磨き込みます。</p>
-          </div>
-          <button id="regenerate" class="button secondary ghost-lux" type="button">再提案</button>
-        </div>
-        <div id="proposalList" class="proposal-grid"></div>
-      </section>
-
-      <!-- ═══ REFERENCE ASSETS ═══ -->
-      <section id="references" class="section section-surface">
-        <div class="section-head row luxury-head">
-          <div>
-            <p class="eyebrow">Reference Assets</p>
-            <h2>既存写真・素材から、質感と方向性を選ぶ</h2>
-          </div>
-          <span class="hint">写真はムード、素材は柄要素として反映します</span>
-        </div>
-        <div id="assetGallery" class="asset-gallery"></div>
-      </section>
-
-      <!-- ═══ STEP 3: EDITOR ═══ -->
-      <section id="editor" class="section editor-section">
-        <div class="section-head luxury-head">
-          <p class="eyebrow">Step 3 — Pattern Editor</p>
-          <h2>柄・配色・ディテールを、静かな高級感へ整える</h2>
-          <p class="section-lead">世界観の調整と細部の調整を同時に行える、アトリエ型の編集パネルです。</p>
-        </div>
-        <div class="editor-layout">
-          <div class="preview-shell">
-            <div id="editorPreview"></div>
-          </div>
-          <div class="control-panel premium-panel">
-            <div class="ai-assistant-card">
-              <div class="ai-card-header"><span class="ai-icon">✦</span><h3>Creative Direction</h3></div>
-              <p class="ai-card-body" id="aiAdvice">上品な印象に寄せるなら、柄の密度を少し抑え、余白に静けさを残すのがおすすめです。</p>
-            </div>
-
-            <label class="field-label">配色
-              <select id="editPalette"></select>
-            </label>
-            <label class="field-label">柄の密度
-              <input id="editDensity" type="range" min="26" max="78" value="46">
-            </label>
-            <label class="field-label">柄の大きさ
-              <input id="editScale" type="range" min="70" max="145" value="100">
-            </label>
-            <label class="field-label">衿型
-              <select id="editCollar">
-                <option value="open">開襟</option>
-                <option value="button-down">ボタンダウン</option>
-                <option value="stand">スタンドカラー</option>
-              </select>
-            </label>
-            <label class="field-label">ロゴ位置
-              <select id="editLogo">
-                <option value="leftChest">左胸</option>
-                <option value="sleeve">袖</option>
-                <option value="back">背面</option>
-                <option value="none">なし</option>
-              </select>
-            </label>
-            <label class="field-label">ボタン
-              <select id="editButton">
-                <option value="black-shell">黒蝶貝風</option>
-                <option value="white-shell">白蝶貝風</option>
-                <option value="wood">木目風</option>
-              </select>
-            </label>
-            <div id="designNotes" class="notes-box"></div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ═══ 2D DESIGN STUDIO ═══ -->
-      <section id="design-studio" class="section design-studio-section">
-        <div class="section-head luxury-head">
-          <p class="eyebrow">Design Studio — Fabric.js</p>
-          <h2>ロゴ・タイポを、作品の一部として配置する</h2>
-          <p class="section-lead">正確さだけでなく、ブランドらしい余白・緊張感・バランスをつくるためのスタジオです。</p>
-        </div>
-        <div class="studio-layout">
-          <div class="canvas-shell">
-            <canvas id="fabricCanvas"></canvas>
-          </div>
-          <div class="control-panel studio-controls premium-panel">
-            <div class="panel-title">ロゴアップロード</div>
-            <label class="upload-btn button secondary wide ghost-lux">
-              画像を選択
-              <input type="file" id="logoUpload" accept="image/png,image/jpeg,image/webp" hidden>
-            </label>
-
-            <div class="panel-title" style="margin-top:20px">テキスト入力</div>
-            <label class="field-label">文字を入力
-              <input id="studioText" type="text" value="OKINAWA" placeholder="チーム名など">
-            </label>
-            <label class="field-label">フォント
-              <select id="studioFont">
-                <option value="Noto Sans JP">Noto Sans JP</option>
-                <option value="Playfair Display">Playfair Display</option>
-                <option value="Cormorant Garamond">Cormorant Garamond</option>
-                <option value="Georgia">Georgia</option>
-                <option value="Arial">Arial</option>
-              </select>
-            </label>
-            <div class="measure-grid">
-              <label class="field-label">文字色
-                <input id="studioTextColor" type="color" value="#172326">
-              </label>
-              <label class="field-label">縁取り色
-                <input id="studioStrokeColor" type="color" value="#ffffff">
-              </label>
-            </div>
-            <label class="field-label">縁取り幅
-              <input id="studioStrokeWidth" type="range" min="0" max="6" value="0">
-            </label>
-            <button id="addTextBtn" class="button primary wide aurora" type="button">テキストを追加</button>
-
-            <div class="studio-actions" style="margin-top:24px">
-              <button id="deleteSelectedBtn" class="button secondary" type="button">選択削除</button>
-              <button id="clearCanvasBtn" class="button secondary" type="button">全削除</button>
-            </div>
-
-            <div class="panel-title" style="margin-top:24px">書き出し・保存</div>
-            <button id="exportPngBtn" class="button primary wide aurora" type="button">PNG書き出し</button>
-            <button id="saveDesignBtn" class="button secondary wide" type="button" style="margin-top:8px">デザインを保存</button>
-            <button id="shareUrlBtn" class="button secondary wide" type="button" style="margin-top:8px">共有URLをコピー</button>
-            <p id="studioStatus" class="status" role="status"></p>
-          </div>
-        </div>
-      </section>
-
-      <!-- ═══ STEP 5: MODEL & SIZE ═══ -->
-      <section id="model-check" class="section model-section">
-        <div class="section-head row luxury-head">
-          <div>
-            <p class="eyebrow">Step 5 — 3D Size Simulation</p>
-            <h2>360°の見え方、光環境、着用感を主役級の体験に</h2>
-            <p class="section-lead">このサイト最大の武器である3D体験を、ショーケースとして磨き上げました。</p>
-          </div>
-          <div class="hero-inline-actions">
-            <button id="toggleBodyBtn" class="button secondary ghost-lux" type="button">BODY ON</button>
-            <div id="viewSegments" class="segmented" role="group" aria-label="模型表示の切り替え">
-              <button class="segment selected" type="button" data-view="front">正面</button>
-              <button class="segment" type="button" data-view="back">背面</button>
-              <button class="segment" type="button" data-view="side">横</button>
-            </div>
-          </div>
-        </div>
-        <div class="model-layout">
-          <div class="model-preview-shell">
-            <div class="model-toolbar premium-toolbar">
-              <div id="environmentSegments" class="segmented" role="group" aria-label="ライティング環境">
-                <button class="segment selected" type="button" data-env="atelier">Atelier</button>
-                <button class="segment" type="button" data-env="resort">Resort</button>
-                <button class="segment" type="button" data-env="night">Night</button>
+          <div class="hero-visual reveal" aria-label="オリジナルかりゆしウェアの着用イメージ">
+            <div class="visual-panel">
+              <div class="team-strip">
+                <img src="assets/kariyushi-stripe.svg" alt="紺色の企業向けかりゆしウェア">
+                <img src="assets/kariyushi-botanical.svg" alt="淡い緑の店舗スタッフ向けかりゆしウェア">
+                <img src="assets/kariyushi-wave.svg" alt="青い波柄のオリジナルかりゆしウェア">
               </div>
-              <div id="focusSegments" class="segmented" role="group" aria-label="注目部位">
-                <button class="segment selected" type="button" data-focus="full">全体</button>
-                <button class="segment" type="button" data-focus="collar">襟</button>
-                <button class="segment" type="button" data-focus="logo">ロゴ</button>
-                <button class="segment" type="button" data-focus="sleeve">袖</button>
+              <div class="logo-sample">
+                <span>LOGO</span>
+                <strong>会社ロゴやカラーを自然に反映</strong>
               </div>
             </div>
-            <div class="model-preview"><div id="modelPreview"></div></div>
-          </div>
-          <div class="control-panel premium-panel">
-            <div class="panel-title">着用者寸法</div>
-            <div class="measure-grid">
-              <label class="field-label">身長 cm<input id="heightInput" type="number" min="140" max="205" value="170"></label>
-              <label class="field-label">胸囲 cm<input id="chestInput" type="number" min="70" max="130" value="92"></label>
-              <label class="field-label">ウエスト cm<input id="waistInput" type="number" min="60" max="130" value="82"></label>
-              <label class="field-label">肩幅 cm<input id="shoulderInput" type="number" min="34" max="60" value="44"></label>
+            <div class="hero-note">
+              <span>受付・店舗・営業・イベントに</span>
+              <strong>そろえて着ると、会社の印象が整います。</strong>
             </div>
-            <div class="panel-title">人物モデル</div>
-            <div id="mannequinSegments" class="segmented model-selector" role="group" aria-label="人物モデルの切り替え">
-              <button class="segment selected" type="button" data-mannequin="male">男性</button>
-              <button class="segment" type="button" data-mannequin="female">女性</button>
-            </div>
-            <label class="field-label">体型模型
-              <select id="bodyType">
-                <option value="slim">細身</option>
-                <option value="normal" selected>標準</option>
-                <option value="strong">がっしり</option>
-              </select>
-            </label>
-            <label class="field-label">確認サイズ
-              <select id="sizeSelect">
-                <option value="S">S</option>
-                <option value="M" selected>M</option>
-                <option value="L">L</option>
-                <option value="LL">LL</option>
-                <option value="3L">3L</option>
-              </select>
-            </label>
-            <div id="fitReport" class="fit-report"></div>
           </div>
         </div>
       </section>
 
-      <!-- ═══ STEP 6: SPECIFICATION ═══ -->
-      <section id="order" class="section order-section">
-        <div class="section-head luxury-head">
-          <p class="eyebrow">Step 6 — Final Specification</p>
-          <h2>最後まで事務的にしない、オーダーシートとしての美しさ</h2>
-          <p class="section-lead">仕様確認、概算、相談導線までを、信頼感のあるラストビューとして整えました。</p>
+      <section class="section problem-section">
+        <div class="container section-grid">
+          <div class="section-copy reveal">
+            <p class="eyebrow">お悩み・共感</p>
+            <h2>そのかりゆしウェア、会社らしさまで伝わっていますか？</h2>
+            <p>
+              沖縄では、かりゆしウェアはただの服ではなく、会社や店舗の印象をつくる大切なユニフォームです。
+              既製品を選ぶだけだと、他社と似た印象になったり、会社のカラーや雰囲気が伝わりにくいこともあります。
+            </p>
+          </div>
+          <div class="concern-grid reveal">
+            <span>既製品だと他社と似た印象になってしまう</span>
+            <span>会社のイメージカラーを取り入れたい</span>
+            <span>ロゴを自然に入れたい</span>
+            <span>社員全員で統一感を出したい</span>
+            <span>店舗や受付で好印象を持たれたい</span>
+            <span>Tシャツではカジュアルすぎる</span>
+            <span>沖縄らしさと仕事着らしさを両立したい</span>
+          </div>
         </div>
-        <div class="spec-layout">
-          <div id="specSheet" class="spec-sheet"></div>
-          <form id="contactForm" class="contact-form premium-panel">
-            <div class="panel-title">お問い合わせ</div>
-            <p class="contact-intro">制作背景、希望納期、ロゴデータの有無までまとめて共有すると、次の提案精度が上がります。</p>
-            <label class="field-label">お名前・会社名<input required type="text" name="company" placeholder="例：沖縄サンプルホテル"></label>
-            <label class="field-label">メールアドレス<input required type="email" name="email" placeholder="example@example.com"></label>
-            <label class="field-label">相談内容<textarea rows="4" name="message" placeholder="納期、必要枚数、ロゴデータの有無など"></textarea></label>
-            <div class="contact-trust">
-              <div><strong>見積もり前提</strong><span>生地・プリント方式・縫製仕様を確認して確定</span></div>
-              <div><strong>保存対応</strong><span>設計内容はローカルに保持し、共有URLにも対応</span></div>
+      </section>
+
+      <section class="section solution-section">
+        <div class="container split-layout">
+          <div class="image-stack reveal" aria-label="制作イメージ">
+            <img src="assets/kariyushi-stripe.svg" alt="紺とベージュの幾何学柄かりゆしウェア">
+            <img src="assets/kariyushi-heritage.svg" alt="青い紅型風のかりゆしウェア">
+          </div>
+          <div class="section-copy reveal">
+            <p class="eyebrow">解決策</p>
+            <h2>既製品を選ぶのではなく、会社に合わせてつくる。</h2>
+            <p>
+              オリジナルかりゆしウェアなら、会社のロゴ、コーポレートカラー、業種の雰囲気、店舗の世界観に合わせて制作できます。
+              目指すのは、社員が着やすく、お客様にも好印象を与え、会社らしさが自然に伝わる一着です。
+            </p>
+            <a class="button button-secondary" href="#patterns">制作パターンを見る</a>
+          </div>
+        </div>
+      </section>
+
+      <section id="service" class="section">
+        <div class="container">
+          <div class="section-head reveal">
+            <p class="eyebrow">サービス紹介</p>
+            <h2>オリジナルかりゆしウェア制作</h2>
+            <p>
+              ロゴだけを入れるシンプルなカスタマイズから、柄や配色までこだわるデザイン制作まで対応します。
+            </p>
+          </div>
+          <div class="card-grid service-grid">
+            <article class="info-card reveal">
+              <span class="card-number">01</span>
+              <h3>会社カラーを活かしたデザイン</h3>
+              <p>コーポレートカラーや店舗の雰囲気に合わせて、色味や柄の方向性を設計します。</p>
+            </article>
+            <article class="info-card reveal">
+              <span class="card-number">02</span>
+              <h3>ロゴ・マークのカスタマイズ</h3>
+              <p>胸元、袖、襟元、柄の一部など、自然に見える位置へロゴやマークを配置できます。</p>
+            </article>
+            <article class="info-card reveal">
+              <span class="card-number">03</span>
+              <h3>業種に合わせた印象づくり</h3>
+              <p>ホテル、飲食店、観光業、建設業、士業、医療・介護など、見せたい印象から逆算します。</p>
+            </article>
+            <article class="info-card reveal">
+              <span class="card-number">04</span>
+              <h3>注文予約・制作相談</h3>
+              <p>何枚から作れるのか、納期はどのくらいか。制作前の疑問からご相談いただけます。</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="reason" class="section reason-section">
+        <div class="container">
+          <div class="section-head reveal">
+            <p class="eyebrow">選ばれる理由</p>
+            <h2>オリジナルだから、会社の印象まで変えられる。</h2>
+          </div>
+          <div class="reason-list">
+            <article class="reason-row reveal">
+              <span>01</span>
+              <div>
+                <h3>既製品にはない会社らしさを出せる</h3>
+                <p>市販品では表現しにくい、会社の色・ロゴ・雰囲気をデザインに反映できます。</p>
+              </div>
+            </article>
+            <article class="reason-row reveal">
+              <span>02</span>
+              <div>
+                <h3>Tシャツ感覚で、仕事着としてきちんと見える</h3>
+                <p>自由度がありながら、かりゆしウェアなら沖縄のビジネスシーンにも自然になじみます。</p>
+              </div>
+            </article>
+            <article class="reason-row reveal">
+              <span>03</span>
+              <div>
+                <h3>社員の一体感が生まれる</h3>
+                <p>同じデザインを着ることで、店舗営業、受付、外回りなどで印象をそろえられます。</p>
+              </div>
+            </article>
+            <article class="reason-row reveal">
+              <span>04</span>
+              <div>
+                <h3>お客様に覚えてもらいやすい</h3>
+                <p>会社独自の柄や色があると、接客や営業の場面でも自然な認知につながります。</p>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="patterns" class="section">
+        <div class="container">
+          <div class="section-head reveal">
+            <p class="eyebrow">制作パターン</p>
+            <h2>目的に合わせて選べる制作パターン</h2>
+          </div>
+          <div class="card-grid pattern-grid">
+            <article class="pattern-card reveal">
+              <img src="assets/kariyushi-logo.svg" alt="ロゴ追加タイプのベースになる白いかりゆしウェア">
+              <div>
+                <span class="card-number">Pattern 01</span>
+                <h3>ロゴ追加タイプ</h3>
+                <p>既存デザインをベースに、会社ロゴやマークを加えるシンプルなタイプです。</p>
+                <ul>
+                  <li>まずは少量から試したい</li>
+                  <li>予算を抑えたい</li>
+                  <li>シンプルに会社感を出したい</li>
+                </ul>
+                <button class="text-button" type="button" data-tryon-jump data-pattern="logo">3Dで見る</button>
+              </div>
+            </article>
+            <article class="pattern-card reveal">
+              <img src="assets/kariyushi-stripe.svg" alt="カラーアレンジタイプの紺色かりゆしウェア">
+              <div>
+                <span class="card-number">Pattern 02</span>
+                <h3>カラーアレンジタイプ</h3>
+                <p>会社のイメージカラーを取り入れて、統一感のある印象に仕上げます。</p>
+                <ul>
+                  <li>コーポレートカラーを活かしたい</li>
+                  <li>社員の統一感を出したい</li>
+                  <li>派手すぎず会社らしさを出したい</li>
+                </ul>
+                <button class="text-button" type="button" data-tryon-jump data-pattern="stripe">3Dで見る</button>
+              </div>
+            </article>
+            <article class="pattern-card reveal">
+              <img src="assets/kariyushi-wave.svg" alt="フルオリジナルデザインタイプの青い波柄かりゆしウェア">
+              <div>
+                <span class="card-number">Pattern 03</span>
+                <h3>フルオリジナルデザインタイプ</h3>
+                <p>柄・配色・ロゴ配置まで、会社独自の一着として制作するタイプです。</p>
+                <ul>
+                  <li>他社とかぶらないデザインにしたい</li>
+                  <li>ブランド感を高めたい</li>
+                  <li>記念品やイベント用として作りたい</li>
+                </ul>
+                <button class="text-button" type="button" data-tryon-jump data-pattern="wave">3Dで見る</button>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="tryon" class="section tryon-section configurator-section">
+        <div class="container">
+          <div class="section-head configurator-heading reveal">
+            <p class="eyebrow">Kariyushi Design Studio</p>
+            <h2>選ぶたび、仕上がりと概算がひとつにつながる</h2>
+            <p>
+              商品仕様・プレビュー・見積もり内容を同じデータで管理します。
+              3Dを読み込めない端末でも、2Dプレビューでそのまま相談を続けられます。
+            </p>
+          </div>
+
+          <ol class="configurator-steps reveal" aria-label="デザインから見積もりまでの流れ">
+            <li class="is-current"><span>01</span><strong>仕様を選ぶ</strong></li>
+            <li><span>02</span><strong>プレビュー</strong></li>
+            <li><span>03</span><strong>概算を確認</strong></li>
+            <li><span>04</span><strong>見積もり相談</strong></li>
+          </ol>
+
+          <div class="configurator-layout">
+            <div class="preview-workspace reveal">
+              <div class="preview-toolbar">
+                <div>
+                  <span class="workspace-label">LIVE PREVIEW</span>
+                  <div class="tryon-summary" aria-live="polite">
+                    <span id="tryonSummaryPattern">紺ストライプ</span>
+                    <span id="tryonSummaryModel">男性マネキン</span>
+                    <span id="tryonSummarySize">Mサイズ</span>
+                  </div>
+                </div>
+                <button class="preview-capture" id="capturePreview" type="button">プレビューを保存</button>
+              </div>
+
+              <div class="tryon-canvas-wrap" id="tryonCanvasWrap">
+                <canvas id="tryonCanvas" aria-label="かりゆしウェア3Dプレビュー"></canvas>
+                <div class="tryon-loading" id="tryonLoading">3Dプレビューを読み込み中です</div>
+                <div class="preview-fallback" id="tryonFallback" hidden>
+                  <strong>2Dプレビューで表示しています</strong>
+                  <span>デザイン選択と見積もり相談は、そのまま続けられます。</span>
+                </div>
+              </div>
+
+              <div class="tryon-controls compact-controls" aria-label="プレビュー操作">
+                <div class="control-group">
+                  <span>表示モデル</span>
+                  <div class="segmented-control three-up" role="group" aria-label="表示モデル選択">
+                    <button type="button" class="is-active" data-tryon-model="male">メンズ</button>
+                    <button type="button" data-tryon-model="female">レディース</button>
+                    <button type="button" data-tryon-model="unisex">ユニセックス</button>
+                  </div>
+                </div>
+                <div class="control-group">
+                  <span>表示する柄</span>
+                  <div class="swatch-control pattern-shortcuts" role="group" aria-label="柄選択">
+                    <button type="button" class="is-active" data-tryon-pattern="stripe"><i style="--swatch:#123047"></i>ストライプ</button>
+                    <button type="button" data-tryon-pattern="botanical"><i style="--swatch:#9bb69f"></i>ボタニカル</button>
+                    <button type="button" data-tryon-pattern="wave"><i style="--swatch:#2a9fd6"></i>波柄</button>
+                    <button type="button" data-tryon-pattern="logo"><i style="--swatch:#f7f1e8"></i>ロゴ中心</button>
+                  </div>
+                </div>
+                <div class="preview-control-row">
+                  <label>サイズ
+                    <select id="tryonSize" aria-label="プレビューサイズ">
+                      <option value="S">S</option>
+                      <option value="M" selected>M</option>
+                      <option value="L">L</option>
+                      <option value="LL">LL</option>
+                      <option value="3L">3L</option>
+                    </select>
+                  </label>
+                  <label>柄スケール
+                    <input id="tryonScale" type="range" min="70" max="135" value="100" aria-label="柄の大きさ">
+                  </label>
+                  <div class="segmented-control view-control" role="group" aria-label="視点選択">
+                    <button type="button" class="is-active" data-tryon-view="front">正面</button>
+                    <button type="button" data-tryon-view="side">横</button>
+                    <button type="button" data-tryon-view="back">背面</button>
+                    <button type="button" data-tryon-spin>回転</button>
+                  </div>
+                </div>
+                <p class="tryon-hint">ドラッグまたはスワイプで回転、ピンチ・ホイールで拡大できます。</p>
+              </div>
             </div>
-            <button class="button primary wide aurora" type="submit">仕様内容を保存する</button>
-            <p id="contactStatus" class="status" role="status"></p>
+
+            <form class="configurator-panel reveal" id="configuratorForm">
+              <div class="panel-intro">
+                <span class="workspace-label">DESIGN OPTIONS</span>
+                <h3>商品仕様を選択</h3>
+                <p>後から変更できます。分かる範囲だけ選んでください。</p>
+              </div>
+
+              <fieldset class="config-fieldset">
+                <legend><span>1</span> 形と着用タイプ</legend>
+                <div class="config-grid">
+                  <label>着用タイプ
+                    <select data-config-field="gender">
+                      <option value="mens">メンズ</option>
+                      <option value="womens">レディース</option>
+                      <option value="unisex">ユニセックス</option>
+                    </select>
+                  </label>
+                  <label>シルエット
+                    <select data-config-field="bodyType">
+                      <option value="standard">スタンダード</option>
+                      <option value="slim">スリム</option>
+                      <option value="wide">ゆったり</option>
+                    </select>
+                  </label>
+                  <label>袖
+                    <select data-config-field="sleeveType">
+                      <option value="short">半袖</option>
+                      <option value="long">長袖</option>
+                    </select>
+                  </label>
+                  <label>襟
+                    <select data-config-field="collarType">
+                      <option value="open">開襟</option>
+                      <option value="regular">レギュラーカラー</option>
+                      <option value="button-down">ボタンダウン</option>
+                    </select>
+                  </label>
+                </div>
+              </fieldset>
+
+              <fieldset class="config-fieldset">
+                <legend><span>2</span> 生地・色・柄</legend>
+                <div class="config-grid">
+                  <label>生地
+                    <select data-config-field="fabricId">
+                      <option value="standard">スタンダード綿混</option>
+                      <option value="coolmax">吸汗速乾</option>
+                      <option value="linen">リネン混</option>
+                    </select>
+                  </label>
+                  <label>柄
+                    <select data-config-field="patternId">
+                      <option value="stripe">紺ストライプ</option>
+                      <option value="botanical">淡緑ボタニカル</option>
+                      <option value="wave">青波柄</option>
+                      <option value="logo">ロゴ中心</option>
+                    </select>
+                  </label>
+                  <label class="color-field">ベースカラー
+                    <span><input data-config-field="baseColor" type="color" value="#123047"><output data-color-output>#123047</output></span>
+                  </label>
+                  <label class="toggle-field">ポケット
+                    <span><input data-config-field="pocket.enabled" type="checkbox" checked>左胸に付ける</span>
+                  </label>
+                </div>
+              </fieldset>
+
+              <fieldset class="config-fieldset">
+                <legend><span>3</span> ロゴ・名入れ</legend>
+                <div class="config-grid">
+                  <label class="wide">ロゴ画像
+                    <input id="logoUpload" type="file" accept="image/png,image/jpeg,image/webp">
+                    <small>PNG・JPEG・WebP、5MBまで</small>
+                  </label>
+                  <label>ロゴ位置
+                    <select data-config-field="logo.position">
+                      <option value="leftChest">左胸</option>
+                      <option value="rightChest">右胸</option>
+                      <option value="back">背面</option>
+                      <option value="leftSleeve">左袖</option>
+                      <option value="rightSleeve">右袖</option>
+                    </select>
+                  </label>
+                  <label>加工方法
+                    <select data-config-field="logo.processingType">
+                      <option value="print">プリント</option>
+                      <option value="embroidery">刺繍</option>
+                    </select>
+                  </label>
+                  <label class="wide">会社名・チーム名
+                    <input data-config-field="companyName.text" type="text" maxlength="40" placeholder="例：KARIYUSHI TEAM">
+                  </label>
+                </div>
+              </fieldset>
+
+              <fieldset class="config-fieldset">
+                <legend><span>4</span> サイズ・数量</legend>
+                <div class="config-grid">
+                  <label>代表サイズ
+                    <select data-config-field="size">
+                      <option value="S">S</option>
+                      <option value="M" selected>M</option>
+                      <option value="L">L</option>
+                      <option value="LL">LL</option>
+                      <option value="3L">3L</option>
+                    </select>
+                  </label>
+                  <label>数量
+                    <input data-config-field="quantity" type="number" min="1" max="999" value="10" inputmode="numeric">
+                  </label>
+                  <label class="wide">希望納期
+                    <input data-config-field="requestedDeliveryDate" type="date">
+                  </label>
+                </div>
+              </fieldset>
+
+              <aside class="estimate-card" aria-live="polite">
+                <div class="estimate-total">
+                  <span>概算合計（税込）</span>
+                  <output id="estimatedPrice">¥0</output>
+                </div>
+                <ul id="priceBreakdown" class="price-breakdown">
+                  <li><span>仕様を選ぶと内訳が表示されます</span><strong>—</strong></li>
+                </ul>
+                <p>表示価格は概算です。仕様・数量・加工内容の確認後に正式なお見積もりをご案内します。</p>
+              </aside>
+
+              <div class="config-actions">
+                <button class="button button-primary" id="goToQuote" type="button">この内容で見積もり相談</button>
+                <button class="reset-config" type="reset" data-config-reset>選択内容をリセット</button>
+              </div>
+              <p class="config-status" id="configuratorStatus" role="status" aria-live="polite"></p>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <section id="scenes" class="section scenes-section">
+        <div class="container">
+          <div class="section-head reveal">
+            <p class="eyebrow">活用シーン</p>
+            <h2>こんな場面で選ばれています</h2>
+          </div>
+          <div class="scene-grid">
+            <article class="scene-card reveal">
+              <h3>会社の夏用ユニフォームに</h3>
+              <p>涼しさときちんと感を両立した、沖縄の仕事着として活用できます。</p>
+            </article>
+            <article class="scene-card reveal">
+              <h3>店舗・受付スタッフの制服に</h3>
+              <p>清潔感や親しみやすさを伝え、空間全体の印象も整えられます。</p>
+            </article>
+            <article class="scene-card reveal">
+              <h3>観光・ホテル・飲食業に</h3>
+              <p>沖縄らしさを演出しながら、スタッフの統一感を出せます。</p>
+            </article>
+            <article class="scene-card reveal">
+              <h3>イベント・周年記念に</h3>
+              <p>写真に残る場面でも、統一感と特別感のある一着になります。</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="cases" class="section">
+        <div class="container">
+          <div class="section-head reveal">
+            <p class="eyebrow">制作事例</p>
+            <h2>会社や団体ごとの雰囲気に合わせて調整できます</h2>
+          </div>
+          <div class="case-grid">
+            <article class="case-card reveal">
+              <img src="assets/kariyushi-stripe.svg" alt="企業ユニフォームの制作イメージ">
+              <div>
+                <h3>企業ユニフォーム</h3>
+                <p><strong>目的：</strong>夏用の社内ユニフォームとして導入</p>
+                <p><strong>ポイント：</strong>会社カラーをベースに、社員の統一感と来客時の印象アップを意識。</p>
+              </div>
+            </article>
+            <article class="case-card reveal">
+              <img src="assets/kariyushi-botanical.svg" alt="飲食店スタッフウェアの制作イメージ">
+              <div>
+                <h3>飲食店スタッフウェア</h3>
+                <p><strong>目的：</strong>店舗の世界観に合う制服を作りたい</p>
+                <p><strong>ポイント：</strong>親しみやすく、写真にも映えるデザインに。</p>
+              </div>
+            </article>
+            <article class="case-card reveal">
+              <img src="assets/kariyushi-heritage.svg" alt="周年記念ウェアの制作イメージ">
+              <div>
+                <h3>周年記念ウェア</h3>
+                <p><strong>目的：</strong>記念イベント用の特別な一着を作りたい</p>
+                <p><strong>ポイント：</strong>周年ロゴとオリジナル柄を組み合わせ、記念品としても残せる印象に。</p>
+              </div>
+            </article>
+          </div>
+          <div class="center reveal">
+            <a class="button button-secondary" href="#contact">制作事例をもっと見る</a>
+          </div>
+        </div>
+      </section>
+
+      <section id="flow" class="section flow-section">
+        <div class="container">
+          <div class="section-head reveal">
+            <p class="eyebrow">制作の流れ</p>
+            <h2>ご相談から納品までの流れ</h2>
+          </div>
+          <ol class="flow-list">
+            <li class="reveal"><span>STEP01</span><strong>お問い合わせ・注文予約</strong><p>メール・電話・LINEから、枚数、用途、希望時期を分かる範囲でご相談ください。</p></li>
+            <li class="reveal"><span>STEP02</span><strong>ヒアリング</strong><p>会社の雰囲気、使用シーン、入れたいロゴやカラーをお聞きします。</p></li>
+            <li class="reveal"><span>STEP03</span><strong>デザイン方向性のご提案</strong><p>派手すぎない・地味すぎないバランスで、方向性をご提案します。</p></li>
+            <li class="reveal"><span>STEP04</span><strong>お見積もり・仕様確認</strong><p>枚数、サイズ、デザイン内容、納期を確認し、お見積もりをご案内します。</p></li>
+            <li class="reveal"><span>STEP05</span><strong>制作開始</strong><p>内容にご納得いただいたうえで制作を進め、必要に応じて進行中の確認も行います。</p></li>
+            <li class="reveal"><span>STEP06</span><strong>納品</strong><p>完成したかりゆしウェアを、会社ユニフォームや店舗制服としてご活用ください。</p></li>
+          </ol>
+        </div>
+      </section>
+
+      <section id="faq" class="section">
+        <div class="container faq-layout">
+          <div class="section-copy reveal">
+            <p class="eyebrow">よくある質問</p>
+            <h2>問い合わせ前の不安を整理できます</h2>
+            <p>分からないことが多い段階でも相談できます。仕様や枚数は、やり取りしながら一緒に決めていきます。</p>
+          </div>
+          <div class="faq-list reveal">
+            <details open>
+              <summary>デザインが決まっていなくても相談できますか？</summary>
+              <p>はい、大丈夫です。会社カラー、ロゴ、使用シーンなどをお聞きしながら方向性を整理します。</p>
+            </details>
+            <details>
+              <summary>会社ロゴを入れることはできますか？</summary>
+              <p>はい、可能です。胸元、袖、柄の一部など、自然に見える位置をご提案します。</p>
+            </details>
+            <details>
+              <summary>何枚から注文できますか？</summary>
+              <p>注文可能枚数は仕様や制作内容によって変わります。まずは希望枚数をお聞かせください。</p>
+            </details>
+            <details>
+              <summary>既製品のかりゆしウェアとの違いは何ですか？</summary>
+              <p>オリジナル制作では、会社の色・ロゴ・雰囲気を反映できるため、ユニフォームとしての一体感や特別感を出しやすくなります。</p>
+            </details>
+            <details>
+              <summary>どんな業種に向いていますか？</summary>
+              <p>一般企業、観光業、ホテル、飲食店、店舗、医療・介護、団体、イベントなどに向いています。</p>
+            </details>
+            <details>
+              <summary>納期はどのくらいですか？</summary>
+              <p>デザイン内容や枚数によって異なります。使用予定日が決まっている場合は、早めにご相談ください。</p>
+            </details>
+            <details>
+              <summary>相談したら必ず注文しないといけませんか？</summary>
+              <p>いいえ、相談だけでも大丈夫です。内容・費用・納期を確認したうえでご検討いただけます。</p>
+            </details>
+            <details>
+              <summary>LINEでも相談できますか？</summary>
+              <p>はい、LINEでもご相談いただけます。写真やロゴ画像を送りながら、気軽にやり取りできます。</p>
+            </details>
+          </div>
+        </div>
+      </section>
+
+      <section class="section company-section">
+        <div class="container split-layout">
+          <div class="section-copy reveal">
+            <p class="eyebrow">会社紹介</p>
+            <h2>沖縄の仕事着に、もっと会社らしさを。</h2>
+            <p>
+              かりゆしウェアは、沖縄のビジネスシーンに根づいた大切な仕事着です。
+              だからこそ、ただ着るだけではなく、会社の雰囲気や想いが伝わる一着にする価値があります。
+            </p>
+            <p>
+              私たちは、沖縄の企業・店舗・団体に向けて、オリジナルかりゆしウェアの制作をサポートしています。
+              既製品では出せない、あなたの会社らしさを一緒に形にします。
+            </p>
+          </div>
+          <div class="company-data reveal">
+            <dl>
+              <div><dt>会社名</dt><dd data-company-name>株式会社サンプルかりゆし</dd></div>
+              <div><dt>所在地</dt><dd data-address>沖縄県那覇市〇〇</dd></div>
+              <div><dt>営業時間</dt><dd data-hours>平日 10:00〜18:00</dd></div>
+              <div><dt>対応エリア</dt><dd data-area>沖縄県内</dd></div>
+            </dl>
+          </div>
+        </div>
+      </section>
+
+      <section id="contact" class="section contact-section">
+        <div class="container">
+          <div class="section-head reveal">
+            <p class="eyebrow">お問い合わせ</p>
+            <h2>ご相談・注文予約はこちら</h2>
+            <p>制作相談、注文予約、見積もり依頼を受け付けています。ご都合のよい方法でお問い合わせください。</p>
+          </div>
+          <div class="contact-cards">
+            <article class="contact-card reveal">
+              <span class="contact-label">メール</span>
+              <h3>メールでじっくり相談する</h3>
+              <p>希望枚数、使用予定日、ロゴの有無、デザインイメージなどをまとめて送れます。</p>
+              <a class="button button-mail" href="#" data-mail-link>メールで問い合わせる</a>
+              <small>写真や資料を添付したい方におすすめです。</small>
+            </article>
+            <article class="contact-card reveal">
+              <span class="contact-label">電話</span>
+              <h3>電話で直接相談する</h3>
+              <p>急ぎで確認したい方や、まずは口頭で相談したい方はお電話ください。</p>
+              <a class="button button-phone" href="#" data-phone-link>電話する</a>
+              <small>受付時間：<span data-hours>平日 10:00〜18:00</span> ※仮置きです。</small>
+            </article>
+            <article class="contact-card reveal">
+              <span class="contact-label">LINE</span>
+              <h3>LINEで気軽に相談する</h3>
+              <p>具体的に決まっていない方も、ロゴ画像や参考写真を送りながら相談できます。</p>
+              <a class="button button-line" href="#" data-line-link>LINEで相談する</a>
+              <small>相談だけでも大丈夫です。※LINEリンクは仮置きです。</small>
+            </article>
+          </div>
+
+          <form class="contact-form reveal" id="contactForm">
+            <div class="form-intro">
+              <p class="eyebrow">QUOTATION REQUEST</p>
+              <h3>選んだ仕様で見積もりを相談する</h3>
+              <p>デザインが未確定でも送信できます。担当者が内容を確認して、正式なお見積もりをご案内します。</p>
+            </div>
+            <aside class="quote-handoff" id="quoteSummary" aria-live="polite">
+              <div>
+                <span>選択デザイン</span>
+                <strong id="quoteSummaryDesign">紺ストライプ・半袖</strong>
+              </div>
+              <div>
+                <span>数量</span>
+                <strong id="quoteSummaryQuantity">10枚</strong>
+              </div>
+              <div>
+                <span>概算</span>
+                <strong id="quoteSummaryPrice">計算中</strong>
+              </div>
+            </aside>
+            <input id="configurationPayload" name="configuration" type="hidden">
+            <input id="quotationEstimatedPrice" name="estimatedPrice" type="hidden">
+            <input id="previewImagePayload" name="previewImageUrl" type="hidden">
+            <div class="form-grid">
+              <label>会社名<input name="company" type="text" autocomplete="organization"></label>
+              <label>お名前<input name="name" type="text" autocomplete="name" required></label>
+              <label>メールアドレス<input name="email" type="email" autocomplete="email" required></label>
+              <label>電話番号<input name="tel" type="tel" autocomplete="tel"></label>
+              <label>希望する問い合わせ方法
+                <select name="method">
+                  <option>メール</option>
+                  <option>電話</option>
+                  <option>LINE</option>
+                </select>
+              </label>
+              <label>希望枚数<input name="quantity" type="number" min="1" inputmode="numeric"></label>
+              <label>使用予定日<input name="date" type="date"></label>
+              <label>ロゴデータの有無
+                <select name="logo">
+                  <option>あり</option>
+                  <option>なし</option>
+                  <option>未定</option>
+                </select>
+              </label>
+              <label class="wide">希望デザインのイメージ<textarea name="image" rows="4"></textarea></label>
+              <label class="wide">相談内容<textarea name="message" rows="5" required></textarea></label>
+              <label class="wide consent-field">
+                <input name="privacyConsent" type="checkbox" required>
+                <span>入力内容を見積もり対応のために利用することに同意します</span>
+              </label>
+            </div>
+            <button class="button button-primary" id="contactSubmit" type="submit">見積もり相談を送信する</button>
+            <p class="form-status" id="formStatus" role="status" aria-live="polite"></p>
           </form>
+        </div>
+      </section>
+
+      <section class="section final-cta">
+        <div class="container final-box reveal">
+          <h2>会社らしさが伝わる、オリジナルかりゆしウェアを作りませんか？</h2>
+          <p>
+            「ロゴを入れたい」「会社カラーで作りたい」「社員でそろえて着たい」
+            そんな方は、まずはお気軽にご相談ください。
+          </p>
+          <div class="final-actions">
+            <a class="button button-mail" href="#" data-mail-link>メールで相談する</a>
+            <a class="button button-phone" href="#" data-phone-link>電話で相談する</a>
+            <a class="button button-line" href="#" data-line-link>LINEで相談する</a>
+          </div>
+          <small>相談だけでも大丈夫です。デザインが決まっていなくてもご相談いただけます。</small>
         </div>
       </section>
     </main>
 
-    <!-- ═══ FOOTER ═══ -->
     <footer class="site-footer">
-      <div class="footer-inner">
-        <div class="footer-brand">
-          <div class="brand"><span class="brand-mark">K</span><span>Kariyushi Custom Studio</span></div>
-          <p class="footer-desc">沖縄の伝統的なクラフトマンシップと最新のAI技術を融合。オリジナルかりゆしウェアの企画から発注までを一貫サポートします。</p>
+      <div class="container footer-grid">
+        <div>
+          <strong data-company-name>株式会社サンプルかりゆし</strong>
+          <p>オリジナルかりゆしウェアのご相談はこちら</p>
+          <div class="footer-actions">
+            <a href="#" data-mail-link>メールで相談する</a>
+            <a href="#" data-phone-link>電話する</a>
+            <a href="#" data-line-link>LINEで相談する</a>
+          </div>
         </div>
-        <div class="footer-links">
-          <h4>製作プロセス</h4>
-          <ul>
-            <li>スマートパターン生成</li>
-            <li>那覇市内での素材調達</li>
-            <li>環境配慮型デジタルプリント</li>
-            <li>県内工房での一貫縫製</li>
-          </ul>
-        </div>
-        <div class="footer-links">
-          <h4>サポート</h4>
-          <ul>
-            <li>利用規約</li>
-            <li>プライバシーポリシー</li>
-            <li>よくある質問</li>
-            <li>support@kariyushi-custom.jp</li>
-          </ul>
-        </div>
+        <dl>
+          <div><dt>所在地</dt><dd data-address>沖縄県那覇市〇〇</dd></div>
+          <div><dt>電話番号</dt><dd><a href="#" data-phone-link data-phone-text>098-000-0000</a></dd></div>
+          <div><dt>メール</dt><dd><a href="#" data-mail-link data-mail-text>info@example.com</a></dd></div>
+          <div><dt>営業時間</dt><dd data-hours>平日 10:00〜18:00</dd></div>
+          <div><dt>対応エリア</dt><dd data-area>沖縄県内</dd></div>
+        </dl>
       </div>
-      <div class="footer-bottom">
-        <p>© 2026 KARIYUSHI CUSTOM STUDIO — DIGITAL TWIN PROTOTYPE</p>
+      <div class="container footer-bottom">
+        <a href="#top">ページ上部へ</a>
+        <a href="#">プライバシーポリシー</a>
+        <span>© 2026 <span data-company-name>株式会社サンプルかりゆし</span></span>
       </div>
     </footer>
 
-    <script src="scripts/config.js" defer></script>
-    <script src="scripts/mock-db.js" defer></script>
-    <script src="scripts/api-client.js" defer></script>
-    <script src="scripts/renderers.js" defer></script>
-    <script src="scripts/design-store.js" defer></script>
-    <script src="scripts/fabric-editor.js" defer></script>
-    <script src="scripts/three-viewer.js" defer></script>
-    <script src="scripts/app.js" defer></script>
+    <div class="mobile-cta" aria-label="スマートフォン用固定問い合わせ">
+      <a class="button button-line" href="#" data-line-link>LINE相談</a>
+      <a class="button button-phone" href="#" data-phone-link>電話する</a>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js" crossorigin="anonymous"></script>
+    <script type="module" src="scripts/config.js"></script>
+    <script type="module" src="scripts/mock-db.js"></script>
+    <script type="module" src="scripts/design-store.js"></script>
+    <script type="module" src="scripts/api-client.js"></script>
+    <script type="module" src="scripts/app.js"></script>
+    <script type="module" src="scripts/tryon-studio.js"></script>
+    <script type="module" src="scripts/integration.js"></script>
+    <script>
+      const CONTACT = {
+        company: "株式会社サンプルかりゆし",
+        phone: "098-000-0000",
+        mail: "info@example.com",
+        line: "https://line.me/R/ti/p/@example",
+        address: "沖縄県那覇市〇〇",
+        hours: "平日 10:00〜18:00",
+        area: "沖縄県内"
+      };
+
+      document.querySelectorAll("[data-company-name]").forEach((el) => { el.textContent = CONTACT.company; });
+      document.querySelectorAll("[data-address]").forEach((el) => { el.textContent = CONTACT.address; });
+      document.querySelectorAll("[data-hours]").forEach((el) => { el.textContent = CONTACT.hours; });
+      document.querySelectorAll("[data-area]").forEach((el) => { el.textContent = CONTACT.area; });
+      document.querySelectorAll("[data-phone-link]").forEach((el) => { el.href = `tel:${CONTACT.phone}`; });
+      document.querySelectorAll("[data-mail-link]").forEach((el) => { el.href = `mailto:${CONTACT.mail}`; });
+      document.querySelectorAll("[data-line-link]").forEach((el) => { el.href = CONTACT.line; });
+      document.querySelectorAll("[data-phone-text]").forEach((el) => { el.textContent = CONTACT.phone; });
+      document.querySelectorAll("[data-mail-text]").forEach((el) => { el.textContent = CONTACT.mail; });
+
+      const menuToggle = document.querySelector(".menu-toggle");
+      const siteNav = document.querySelector("#siteNav");
+      menuToggle?.addEventListener("click", () => {
+        const expanded = menuToggle.getAttribute("aria-expanded") === "true";
+        menuToggle.setAttribute("aria-expanded", String(!expanded));
+        siteNav.classList.toggle("is-open", !expanded);
+      });
+
+      const closeMenu = () => {
+        menuToggle?.setAttribute("aria-expanded", "false");
+        siteNav?.classList.remove("is-open");
+      };
+
+      siteNav?.querySelectorAll("a").forEach((link) => {
+        link.addEventListener("click", closeMenu);
+      });
+      document.addEventListener("click", (event) => {
+        if (!siteNav?.classList.contains("is-open")) return;
+        if (siteNav.contains(event.target) || menuToggle?.contains(event.target)) return;
+        closeMenu();
+      });
+      window.addEventListener("scroll", closeMenu, { passive: true });
+
+      const revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+            revealObserver.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.12 });
+      document.querySelectorAll(".reveal").forEach((el) => revealObserver.observe(el));
+
+    </script>
   </body>
 </html>

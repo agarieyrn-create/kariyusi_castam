@@ -5,11 +5,11 @@
 
   window.KariyushiSeed = {
     palettes: {
-      "海風ブルー": { base: "#e7f7f7", accent: "#1c7f93", sub: "#f2b64b", dark: "#173d45" },
-      "月桃ホワイト": { base: "#fbf7ea", accent: "#587f58", sub: "#d8a044", dark: "#2f4737" },
-      "琉球レッド": { base: "#fff0eb", accent: "#c94f49", sub: "#1c7f93", dark: "#432628" },
-      "夜海ブラック": { base: "#172326", accent: "#5db6bd", sub: "#d8a044", dark: "#f7efd9" },
-      "若葉グリーン": { base: "#eef7e9", accent: "#5f8f61", sub: "#d76f54", dark: "#244633" }
+      "海風ブルー": { base: "#e6fbff", accent: "#16a6b8", sub: "#ffc857", dark: "#075e78" },
+      "月桃ホワイト": { base: "#fbfff7", accent: "#3ac48f", sub: "#7bdff2", dark: "#275f51" },
+      "琉球レッド": { base: "#fff4f2", accent: "#ff7a70", sub: "#16a6b8", dark: "#78443f" },
+      "夜海ブラック": { base: "#14313b", accent: "#7bdff2", sub: "#ffc857", dark: "#f4fcff" },
+      "若葉グリーン": { base: "#ecfff5", accent: "#3ac48f", sub: "#ffb86b", dark: "#24684f" }
     },
     patterns: [
       { id: "bingata", name: "紅型風ウェーブ", motifs: ["紅型風", "波模様"], motif_tags: ["紅型風", "波模様"], formal: 4, okinawa: 5, bold: 3 },

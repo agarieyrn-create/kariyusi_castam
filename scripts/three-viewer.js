@@ -80,7 +80,7 @@
       fill: ["#d5f2ee", 1.0, [-4.4, 3.2, 2.8]],
       rim: ["#ffd79b", 0.62, [0.5, 2.2, -5.2]],
       floor: "#dbe6e0",
-      ring: "#c89b3c",
+      ring: "#ffc857",
       exposure: 1.12
     },
     resort: {
@@ -100,7 +100,7 @@
       fill: ["#315f82", 0.55, [-4.2, 2.5, 2.2]],
       rim: ["#f3c36f", 0.9, [0.2, 2.4, -5.7]],
       floor: "#162533",
-      ring: "#c89b3c",
+      ring: "#ffc857",
       exposure: 0.92
     }
   };
@@ -147,6 +147,7 @@
     rimLight: null,
     floorMesh: null,
     floorRing: null,
+    contextLost: false,
   };
 
   /* ═══════════════════════════════════════════════════
@@ -183,16 +184,34 @@
    * WebGL 非対応時のフォールバックメッセージを表示する。
    * @param {HTMLElement} container - メッセージを挿入するコンテナ
    */
-  function showWebGLFallback(container) {
-    container.innerHTML = [
-      '<div style="display:flex;align-items:center;justify-content:center;',
-      'height:100%;text-align:center;padding:2rem;color:#555;font-family:sans-serif;">',
-      '<div>',
-      '<p style="font-size:1.2rem;margin-bottom:0.5rem;">⚠️ 3Dプレビューを表示できません</p>',
-      '<p style="font-size:0.9rem;">お使いのブラウザはWebGLに対応していません。<br>',
-      'Chrome, Firefox, Safari, Edge の最新版をお試しください。</p>',
-      '</div></div>',
-    ].join("");
+  function showWebGLFallback(container, error) {
+    if (!container) return;
+    const payload = viewerState.lastPayload || {};
+    const palette = payload.palettes?.[payload.edit?.palette] || payload.palettes?.[payload.proposal?.palette];
+    const baseColor = /^#(?:[0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(String(palette?.base || ""))
+      ? palette.base
+      : "#16727d";
+    container.dataset.previewMode = "2d";
+    container.innerHTML = `
+      <div role="status" aria-live="polite" style="display:grid;place-items:center;height:100%;min-height:420px;padding:1rem;text-align:center;color:#46565b;font-family:sans-serif;background:#edf3ef;">
+        <div>
+          <svg viewBox="0 0 280 330" role="img" aria-label="2Dかりゆしウェアプレビュー" style="display:block;width:min(240px,72vw);margin:0 auto 1rem;">
+            <ellipse cx="140" cy="304" rx="92" ry="14" fill="#173034" opacity=".12"></ellipse>
+            <path d="M67 70L110 43l30 34 30-34 43 27 52 66-45 35-19-25v137q-61 20-122 0V146l-19 25-45-35Z" fill="${baseColor}"></path>
+            <path d="M110 43l30 34 30-34 10 30-40 31-40-31Z" fill="#fff" opacity=".88"></path>
+            <path d="M91 138q49-65 98 0t-98 0M91 205q49-65 98 0t-98 0" fill="none" stroke="#fff" stroke-width="9" opacity=".38"></path>
+          </svg>
+          <p style="font-size:1rem;font-weight:700;margin:.25rem 0;">3Dプレビューを読み込めませんでした</p>
+          <p style="font-size:.85rem;line-height:1.6;margin:0;">2D画像に切り替えました。デザイン内容の選択と見積もり依頼は、そのまま続けられます。</p>
+        </div>
+      </div>`;
+    window.dispatchEvent(new CustomEvent("kariyushi:viewererror", {
+      detail: {
+        source: "three",
+        fallback: "2d",
+        error: error instanceof Error ? error : new Error("WebGL is unavailable"),
+      },
+    }));
   }
 
   /* ═══════════════════════════════════════════════════
@@ -445,6 +464,17 @@
       antialias: true,
       preserveDrawingBuffer: true,
     });
+    viewerState.contextLost = false;
+
+    if (!canvas.dataset.kariyushiContextEvents) {
+      canvas.dataset.kariyushiContextEvents = "bound";
+      canvas.addEventListener("webglcontextlost", (event) => {
+        event.preventDefault();
+        viewerState.contextLost = true;
+        stopAnimationLoop();
+        showWebGLFallback(canvas.parentElement, new Error("WebGL context was lost"));
+      });
+    }
 
     // devicePixelRatio を最大 2 に制限する理由:
     // 高DPIディスプレイ（3x, 4x）ではレンダリング解像度が非常に高くなり、
@@ -1063,6 +1093,7 @@
     viewerState.mannequinGroup = null;
     viewerState.shirtGroup = null;
     viewerState.canvas = null;
+    viewerState.contextLost = false;
 
     console.log("[3D] cleanup complete");
   }
@@ -1143,17 +1174,17 @@
    */
   function rebuild(payload) {
     console.log("[3D] rebuild()");
+    const container = document.getElementById("modelPreview");
     try {
       viewerState.lastPayload = payload;
 
-      const container = document.getElementById("modelPreview");
       if (!container) {
         console.warn("[3D] #modelPreview missing");
-        return;
+        return false;
       }
 
       // WebGL 対応チェック
-      if (!checkWebGLSupport(container)) return;
+      if (!checkWebGLSupport(container)) return false;
 
       // canvas の取得または作成
       let canvas = container.querySelector("canvas.tryon-canvas");
@@ -1203,10 +1234,28 @@
       viewerState.currentAngle = viewerState.baseAngle + viewerState.focusAngleOffset;
 
       resizeCanvas();
+      container.dataset.previewMode = "3d";
       console.log("[3D] rebuild complete");
+      return true;
     } catch (error) {
       console.error("[3D] error:", error);
+      showWebGLFallback(container, error);
+      return false;
     }
+  }
+
+  /**
+   * 現在の3D表示を見積もり添付用の画像として返す。
+   * @param {string} [mimeType="image/png"] - image/png または image/jpeg
+   * @returns {string} Data URL
+   */
+  function capturePreview(mimeType = "image/png") {
+    if (!viewerState.renderer || !viewerState.canvas || viewerState.contextLost) {
+      throw new Error("3D preview is not ready");
+    }
+    const type = mimeType === "image/jpeg" ? mimeType : "image/png";
+    viewerState.renderer.render(viewerState.scene, viewerState.camera);
+    return viewerState.canvas.toDataURL(type, type === "image/jpeg" ? 0.92 : undefined);
   }
 
   /* ═══════════════════════════════════════════════════
@@ -1255,6 +1304,10 @@
     isBodyVisible() {
       return viewerState.isBodyVisible;
     },
+    isReady() {
+      return Boolean(viewerState.renderer && viewerState.canvas && !viewerState.contextLost);
+    },
+    capturePreview,
     cleanup,
   };
 

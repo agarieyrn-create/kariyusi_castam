@@ -11,38 +11,39 @@ describe("E2E Basic flow (JSDOM)", () => {
     const htmlPath = path.resolve(__dirname, "../../index.html");
     const htmlContent = fs.readFileSync(htmlPath, "utf8");
     
-    dom = new JSDOM(htmlContent, {
-      runScripts: "dangerously",
-      resources: "usable"
-    });
+    dom = new JSDOM(htmlContent);
     document = dom.window.document;
   });
 
   it("should render application header and branding", () => {
-    const brandTitle = document.querySelector(".brand-title");
+    const brandTitle = document.querySelector(".brand [data-company-name]");
     expect(brandTitle).toBeTruthy();
-    expect(brandTitle.textContent).toBe("Kariyushi Custom Studio");
+    expect(brandTitle.textContent).toContain("かりゆし");
+    expect(document.querySelector('.site-nav a[href="#tryon"]')).toBeTruthy();
   });
 
-  it("should contain all design steps section in navigation", () => {
-    const stepLinks = document.querySelectorAll(".step-nav .step-link");
-    expect(stepLinks.length).toBe(6);
-    expect(stepLinks[0].textContent).toContain("条件入力");
-    expect(stepLinks[5].textContent).toContain("注文");
+  it("should contain the design-to-quotation steps", () => {
+    const steps = document.querySelectorAll(".configurator-steps li");
+    expect(steps.length).toBe(4);
+    expect(steps[0].textContent).toContain("仕様を選ぶ");
+    expect(steps[3].textContent).toContain("見積もり相談");
   });
 
-  it("should render design brief form with scene selections", () => {
-    const briefForm = document.getElementById("briefForm");
-    expect(briefForm).toBeTruthy();
-
-    const sceneGrid = document.querySelector('[data-name="scene"]');
-    expect(sceneGrid).toBeTruthy();
-    expect(sceneGrid.querySelectorAll(".choice").length).toBe(5);
+  it("should render the shared configuration controls", () => {
+    const configurator = document.getElementById("configuratorForm");
+    expect(configurator).toBeTruthy();
+    expect(configurator.querySelector('[data-config-field="gender"]')).toBeTruthy();
+    expect(configurator.querySelector('[data-config-field="patternId"]')).toBeTruthy();
+    expect(configurator.querySelector('[data-config-field="quantity"]')).toBeTruthy();
+    expect(configurator.querySelectorAll("[data-config-field]").length).toBeGreaterThanOrEqual(12);
   });
 
-  it("should contain fabric 2D canvas element", () => {
-    const canvas = document.getElementById("fabricCanvas");
+  it("should contain preview and safe fallback elements", () => {
+    const canvas = document.getElementById("tryonCanvas");
     expect(canvas).toBeTruthy();
+    expect(document.getElementById("tryonFallback")).toBeTruthy();
+    expect(document.getElementById("capturePreview")).toBeTruthy();
+    expect(document.getElementById("logoUpload").accept).toBe("image/png,image/jpeg,image/webp");
   });
 
   it("should render contact form with required fields", () => {
@@ -51,5 +52,7 @@ describe("E2E Basic flow (JSDOM)", () => {
     expect(contactForm.querySelector('input[name="company"]')).toBeTruthy();
     expect(contactForm.querySelector('input[name="email"]')).toBeTruthy();
     expect(contactForm.querySelector('textarea[name="message"]')).toBeTruthy();
+    expect(contactForm.querySelector('input[name="privacyConsent"][required]')).toBeTruthy();
+    expect(document.getElementById("configurationPayload")).toBeTruthy();
   });
 });

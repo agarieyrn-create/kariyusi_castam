@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" role="img" aria-labelledby="title desc">
+  <title id="title">紅型風かりゆしウェア</title>
+  <desc id="desc">沖縄の伝統色と幾何学模様を現代的に整えた記念ウェア</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#faecd8"/><stop offset="1" stop-color="#d8c7a8"/></linearGradient>
+    <linearGradient id="cloth" x1="0" x2="1"><stop stop-color="#8b342f"/><stop offset=".5" stop-color="#c25c42"/><stop offset="1" stop-color="#742a2e"/></linearGradient>
+    <pattern id="bingata" width="150" height="150" patternUnits="userSpaceOnUse"><circle cx="38" cy="42" r="25" fill="#f5c365" opacity=".88"/><path d="m95 20 34 34-34 34-34-34Z" fill="#123047" opacity=".78"/><path d="M18 120q45-56 90 0t90 0" fill="none" stroke="#f7f1e8" stroke-width="12" opacity=".72"/></pattern>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="180%"><feDropShadow dx="0" dy="28" stdDeviation="24" flood-color="#5a2726" flood-opacity=".25"/></filter>
+  </defs>
+  <rect width="1200" height="900" fill="url(#bg)"/><path d="M0 710q220 110 430 16t420 0 350 14v160H0Z" fill="#123047" opacity=".1"/><circle cx="110" cy="140" r="210" fill="#f5c365" opacity=".26"/>
+  <g filter="url(#shadow)">
+    <path d="M384 178 236 290l78 152 95-56v338c122 54 260 54 382 0V386l95 56 78-152-148-112-114-35H498Z" fill="url(#cloth)"/>
+    <path d="M384 178 236 290l78 152 95-56v338c122 54 260 54 382 0V386l95 56 78-152-148-112-114-35H498Z" fill="url(#bingata)" opacity=".76"/>
+    <path d="m498 143 102 116 102-116-28-8-74 58-74-58Z" fill="#f7f1e8"/><path d="M600 259v493" stroke="#f7f1e8" stroke-width="15" opacity=".88"/>
+    <g fill="#f5c365"><circle cx="600" cy="338" r="7"/><circle cx="600" cy="424" r="7"/><circle cx="600" cy="510" r="7"/><circle cx="600" cy="596" r="7"/></g>
+  </g>
+  <text x="70" y="94" font-family="sans-serif" font-size="24" font-weight="700" fill="#742a2e" letter-spacing="5">OKINAWA HERITAGE</text>
+</svg>

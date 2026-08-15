@@ -60,4 +60,35 @@ describe("KariyushiRenderers", () => {
     const fit = renderers.fitAnalysis(modelLarge, sizeTable);
     expect(fit.message).toBe("ややタイト");
   });
+
+  it("falls back to the SVG preview when the 3D viewer reports failure", () => {
+    const renderers = global.window.KariyushiRenderers;
+    global.THREE = {};
+    global.window.KariyushiThreeViewer = { rebuild: () => false };
+    const target = { dataset: {}, innerHTML: "" };
+    const proposal = {
+      title: "Preview",
+      palette: "ocean",
+      pattern: { name: "Wave" },
+      density: 46,
+      scale: 100,
+      logo: "none",
+      collar: "open",
+      button: "plain",
+    };
+    const palettes = {
+      ocean: { base: "#16727d", accent: "#ffffff", sub: "#ffc857", dark: "#123047" },
+    };
+    const edit = { palette: "ocean", logo: "none", collar: "open", button: "plain" };
+    const model = { height: 170, chest: 92, waist: 82, shoulder: 44, size: "M", body: "normal", view: "front" };
+    const sizeTable = { M: { chest: 110, shoulder: 45, length: 71, sleeve: 24 } };
+
+    const fit = renderers.renderModel(target, proposal, palettes, edit, model, sizeTable, [], { assetBaseUrl: "" });
+
+    expect(fit.recommendedSize).toBe("M");
+    expect(target.dataset.previewMode).toBe("2d");
+    expect(target.innerHTML).toContain("model-svg");
+    delete global.THREE;
+    delete global.window.KariyushiThreeViewer;
+  });
 });

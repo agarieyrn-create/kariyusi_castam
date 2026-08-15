@@ -398,20 +398,28 @@
   /* ── Hybrid Model Renderer (3D priority, SVG fallback) ── */
   function renderModel(target, proposal, palettes, edit, model, sizeTable, assets, config) {
     const fit = fitAnalysis(model, sizeTable);
+    let fallbackMessage = "";
     if (typeof THREE !== "undefined" && window.KariyushiThreeViewer) {
       try {
-        if (!target.querySelector("canvas.tryon-canvas")) {
-          target.innerHTML = "";
-        }
         const payload = { proposal, palettes, edit, model, fit, assets, config };
         window.KariyushiLatest3D = payload;
-        window.dispatchEvent(new CustomEvent("kariyushi:render3d", { detail: payload }));
-        return fit;
+        const rendered = window.KariyushiThreeViewer.rebuild(payload);
+        if (rendered !== false) {
+          target.dataset.previewMode = "3d";
+          return fit;
+        }
+        fallbackMessage = "3Dプレビューを読み込めなかったため、2D表示に切り替えました。見積もり操作はそのまま続けられます。";
       } catch (err) {
-        // 静かにフォールバック
+        console.warn("[Preview] 3D rendering failed; using SVG fallback.", err);
+        fallbackMessage = "3Dプレビューでエラーが発生したため、2D表示に切り替えました。見積もり操作はそのまま続けられます。";
       }
+    } else {
+      fallbackMessage = "この端末では3Dプレビューを利用できないため、2D表示で確認できます。見積もり操作はそのまま続けられます。";
     }
-    return renderModelSVG(target, proposal, palettes, edit, model, sizeTable, assets, config);
+    target.dataset.previewMode = "2d";
+    const fallbackFit = renderModelSVG(target, proposal, palettes, edit, model, sizeTable, assets, config);
+    target.innerHTML = `<p role="status" class="preview-fallback-message">${fallbackMessage}</p>${target.innerHTML}`;
+    return fallbackFit;
   }
 
   window.KariyushiRenderers = {

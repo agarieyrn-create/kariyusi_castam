@@ -14,6 +14,7 @@
     edit: { ...config.defaultEdit },
     model: { ...config.defaultModel, environment: "atelier", focus: "full" },
     estimate: null,
+    isInquirySubmitting: false,
     assetLimit: config.performance?.initialAssetLimit || 24
   };
 
@@ -33,6 +34,106 @@
       motif: document.getElementById("motifSelect")?.value || "AIに任せる",
       quantity: Number(document.getElementById("quantityInput")?.value) || 50
     };
+  }
+
+  function buildConfigurationFromState() {
+    const current = window.KariyushiStore?.getState?.().configuration || {};
+    const proposal = selectedProposal();
+    const palette = state.catalog?.palettes?.[state.edit.palette];
+    return {
+      ...current,
+      productId: proposal?.assetId || current.productId || "kariyushi-basic",
+      productName: proposal?.title || current.productName || "オリジナルかりゆしウェア",
+      gender: state.model.mannequin === "female" ? "womens" : "mens",
+      bodyType: state.model.body === "slim" ? "slim" : state.model.body === "wide" ? "wide" : "standard",
+      collarType: state.edit.collar || current.collarType,
+      baseColor: palette?.base || current.baseColor,
+      patternId: proposal?.pattern?.id || current.patternId,
+      size: state.model.size || current.size,
+      quantity: Number(state.brief.quantity) || current.quantity || 50,
+      options: Array.isArray(current.options) ? current.options : []
+    };
+  }
+
+  function syncSharedConfiguration() {
+    const store = window.KariyushiStore;
+    if (!store?.updateConfiguration) return buildConfigurationFromState();
+    return store.updateConfiguration(buildConfigurationFromState()).configuration;
+  }
+
+  function inputValue(input) {
+    if (input.type === "checkbox") return input.checked;
+    if (input.type === "number" || input.dataset.valueType === "number") return Number(input.value);
+    return input.value;
+  }
+
+  function configurationUpdateForField(field, value) {
+    if (!field.includes(".")) return { [field]: value };
+    const [parent, child] = field.split(".");
+    const currentParent = window.KariyushiStore?.getState?.().configuration?.[parent] || {};
+    return { [parent]: { ...currentParent, [child]: value } };
+  }
+
+  function renderConfigurationSummary(storeState) {
+    const currency = new Intl.NumberFormat("ja-JP");
+    const estimatedPrice = document.getElementById("estimatedPrice");
+    const breakdown = document.getElementById("priceBreakdown");
+    if (estimatedPrice) estimatedPrice.textContent = `¥${currency.format(storeState.priceBreakdown.total)}（概算）`;
+    if (!breakdown) return;
+    breakdown.replaceChildren();
+    storeState.priceBreakdown.items.forEach((item) => {
+      const row = document.createElement(breakdown.matches("ul, ol") ? "li" : "div");
+      const label = document.createElement("span");
+      const amount = document.createElement("strong");
+      label.textContent = item.label;
+      amount.textContent = `¥${currency.format(item.amount)}`;
+      row.append(label, amount);
+      breakdown.appendChild(row);
+    });
+    if (storeState.priceBreakdown.discount > 0) {
+      const row = document.createElement(breakdown.matches("ul, ol") ? "li" : "div");
+      const label = document.createElement("span");
+      const amount = document.createElement("strong");
+      label.textContent = "数量割引";
+      amount.textContent = `-¥${currency.format(storeState.priceBreakdown.discount)}`;
+      row.append(label, amount);
+      breakdown.appendChild(row);
+    }
+  }
+
+  function setupConfigurationStoreBindings() {
+    const store = window.KariyushiStore;
+    if (!store) return;
+    const controls = [...document.querySelectorAll("[data-config-field]")];
+    const syncControls = (storeState) => {
+      controls.forEach((control) => {
+        const field = control.dataset.configField;
+        const value = field.split(".").reduce((target, key) => target?.[key], storeState.configuration);
+        if (control.type === "radio") control.checked = String(control.value) === String(value);
+        else if (control.type === "checkbox") control.checked = Boolean(value);
+        else if (value !== undefined && document.activeElement !== control) control.value = value;
+      });
+      renderConfigurationSummary(storeState);
+    };
+    const updateFromControl = (event) => {
+      const control = event.currentTarget;
+      if (control.type === "radio" && !control.checked) return;
+      store.updateConfiguration(configurationUpdateForField(control.dataset.configField, inputValue(control)));
+    };
+    controls.forEach((control) => {
+      const eventName = ["range", "number", "color", "text"].includes(control.type) ? "input" : "change";
+      control.addEventListener(eventName, updateFromControl);
+    });
+    document.querySelector("[data-config-reset]")?.addEventListener("click", (event) => {
+      event.preventDefault();
+      store.resetConfiguration();
+    });
+    document.getElementById("configuratorForm")?.addEventListener("submit", (event) => {
+      event.preventDefault();
+      document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" });
+    });
+    store.subscribe(syncControls);
+    syncControls(store.getState());
   }
 
   function syncLiveBrief() {
@@ -203,7 +304,8 @@
         assetId: first.assetId
       };
     }
-    state.estimate = await api.createEstimate(state.brief.quantity);
+    const configuration = syncSharedConfiguration();
+    state.estimate = await api.createEstimate(configuration);
     const fit = renderers.fitAnalysis(state.model, state.catalog.sizeTable);
     state.model.size = fit.recommendedSize;
     renderAll();
@@ -396,35 +498,65 @@
     });
     document.getElementById("contactForm")?.addEventListener("submit", async (event) => {
       event.preventDefault();
+      if (state.isInquirySubmitting) return;
       const form = event.currentTarget;
-      const status = document.getElementById("contactStatus");
+      const status = document.getElementById("contactStatus") || document.getElementById("formStatus");
+      const submitButton = form.querySelector('button[type="submit"], input[type="submit"]');
       const cleanText = (value, max = 500) => String(value || "").trim().replace(/\s+/g, " ").slice(0, max);
+      if (!form.checkValidity()) {
+        form.reportValidity();
+        if (status) status.textContent = "必須項目を確認してください。";
+        return;
+      }
+      const data = new FormData(form);
+      const quantity = Number(data.get("quantity")) || window.KariyushiStore?.getState?.().configuration.quantity || state.brief.quantity || 50;
+      const configuration = window.KariyushiStore?.updateConfiguration({
+        quantity,
+        requestedDeliveryDate: cleanText(data.get("date"), 20) || undefined,
+        notes: cleanText(data.get("message"), 2000)
+      }).configuration || buildConfigurationFromState();
+      const requestKey = form.dataset.requestKey || `inquiry_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+      form.dataset.requestKey = requestKey;
+      state.isInquirySubmitting = true;
+      if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.dataset.originalLabel = submitButton.textContent;
+        submitButton.textContent = "送信中…";
+      }
+      if (status) status.textContent = "見積もり依頼を保存しています…";
       try {
-        const inputName = form.querySelector('input[name="company"]');
-        const inputEmail = form.querySelector('input[name="email"]');
-        const textareaMsg = form.querySelector('textarea[name="message"]');
-        
-        const nameVal = inputName ? cleanText(inputName.value, 80) : "";
-        const emailVal = inputEmail ? cleanText(inputEmail.value, 160).toLowerCase() : "";
-        const noteVal = textareaMsg ? cleanText(textareaMsg.value, 800) : "";
-        
         const inquiry = await api.saveInquiry({
+          requestKey,
           sessionId: state.session?.id,
           proposal: selectedProposal(),
           brief: state.brief,
           edit: state.edit,
           model: state.model,
-          estimate: state.estimate,
+          configuration,
+          previewImageUrl: window.KariyushiStore?.getState?.().previewImageUrl,
           customer: {
-            name: nameVal,
-            email: emailVal,
-            note: noteVal
+            name: cleanText(data.get("name") || data.get("company"), 80),
+            companyName: cleanText(data.get("company"), 120),
+            email: cleanText(data.get("email"), 160).toLowerCase(),
+            phone: cleanText(data.get("tel"), 30),
+            preferredContactMethod: cleanText(data.get("method"), 20),
+            note: cleanText(data.get("message"), 2000)
           }
         });
-        if (status) status.textContent = `保存しました。管理用ID: ${inquiry.id}`;
+        state.estimate = inquiry.priceBreakdown;
+        if (status) status.textContent = `見積もり依頼を受け付けました。受付ID: ${inquiry.id}`;
       } catch (error) {
         if (status) status.textContent = error.message || "保存に失敗しました。";
+      } finally {
+        state.isInquirySubmitting = false;
+        if (submitButton) {
+          submitButton.disabled = false;
+          submitButton.textContent = submitButton.dataset.originalLabel || "見積もりを依頼する";
+        }
       }
+    });
+    document.getElementById("contactForm")?.addEventListener("input", (event) => {
+      delete event.currentTarget.dataset.requestKey;
     });
   }
 
@@ -435,20 +567,49 @@
 
     const sections = [...document.querySelectorAll("main section[id]")];
     const navLinks = [...document.querySelectorAll(".nav a[href^='#']")];
-    const revealItems = [...document.querySelectorAll(".section-head, fieldset, .proposal-card, .asset-card, .control-panel, .preview-shell, .model-preview, .spec-sheet, .how-to-card")];
+    const revealItems = [...document.querySelectorAll(".section-head, fieldset, .hero-card, .trust-item, .proposal-card, .asset-card, .control-panel, .preview-shell, .model-preview, .spec-sheet, .how-to-card, .premium-panel, .contact-form")];
     revealItems.forEach((item, index) => {
       item.classList.add("reveal");
       item.style.transitionDelay = `${Math.min(index * 35, 220)}ms`;
     });
-    requestAnimationFrame(() => {
+
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReducedMotion || !("IntersectionObserver" in window)) {
       revealItems.forEach((item) => item.classList.add("visible"));
-    });
+    } else {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add("visible");
+          observer.unobserve(entry.target);
+        });
+      }, { rootMargin: "0px 0px -12% 0px", threshold: 0.12 });
+      revealItems.forEach((item) => observer.observe(item));
+    }
+
+    function setScrollTheme(ratio) {
+      document.documentElement.style.setProperty("--scroll-progress", ratio.toFixed(4));
+      document.documentElement.style.setProperty("--scroll-angle", `${180 + Math.round(ratio * 86)}deg`);
+      document.documentElement.style.setProperty("--scroll-warm", (0.20 + ratio * 0.12).toFixed(3));
+      document.documentElement.style.setProperty("--scroll-ocean", (0.16 + Math.sin(ratio * Math.PI) * 0.13).toFixed(3));
+      document.documentElement.style.setProperty("--scroll-mint", (0.12 + ratio * 0.15).toFixed(3));
+      document.documentElement.style.setProperty("--scroll-coral", (0.08 + ratio * 0.12).toFixed(3));
+      document.documentElement.style.setProperty("--scroll-warm-x", `${7 + ratio * 18}%`);
+      document.documentElement.style.setProperty("--scroll-ocean-x", `${92 - ratio * 20}%`);
+      document.documentElement.style.setProperty("--scroll-mint-y", `${42 + ratio * 12}%`);
+      document.documentElement.style.setProperty("--scroll-coral-x", `${18 + ratio * 58}%`);
+      document.documentElement.style.setProperty("--noise-shift-a", `${Math.round(ratio * -80)}px ${Math.round(ratio * 120)}px`);
+      document.documentElement.style.setProperty("--noise-shift-b", `${Math.round(ratio * 90)}px ${Math.round(ratio * -70)}px`);
+    }
 
     function updateScrollState() {
       const height = document.documentElement.scrollHeight - window.innerHeight;
-      progress.style.transform = `scaleX(${height > 0 ? window.scrollY / height : 0})`;
+      const ratio = height > 0 ? Math.min(Math.max(window.scrollY / height, 0), 1) : 0;
+      progress.style.transform = `scaleX(${ratio})`;
+      setScrollTheme(ratio);
       const current = sections.findLast((section) => section.getBoundingClientRect().top <= 120);
       navLinks.forEach((link) => link.classList.toggle("active", current && link.getAttribute("href") === `#${current.id}`));
+      sections.forEach((section) => section.classList.toggle("is-current", current === section));
     }
 
     window.addEventListener("scroll", updateScrollState, { passive: true });
@@ -546,11 +707,13 @@
 
   async function init() {
     state.catalog = await api.getCatalog();
+    setupConfigurationStoreBindings();
+    setupForms();
+    if (!document.getElementById("briefForm")) return;
     setupChoices();
     setupCatalogControls();
     setupEditor();
     setupModel();
-    setupForms();
     setupSiteMotion();
     setupDesignStudio();
     syncBodyToggle();

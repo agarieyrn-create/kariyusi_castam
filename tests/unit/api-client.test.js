@@ -81,5 +81,53 @@ describe("KariyushiApiClient", () => {
 
     const est200 = await client.createEstimate(200);
     expect(est200.unitPrice).toBe(6900); // ボリュームディスカウント
+    expect(est200.items.length).toBeGreaterThan(0);
+    expect(est200.discount).toBeGreaterThan(0);
+    expect(est200.isEstimate).toBe(true);
+  });
+
+  it("should validate, recalculate and save an inquiry", async () => {
+    const inquiry = await client.saveInquiry({
+      requestKey: "request-001",
+      configuration: { quantity: 50, sleeveType: "short", fabricId: "standard" },
+      estimatedPrice: 1,
+      customer: {
+        name: " 沖縄 太郎 ",
+        email: "TARO@EXAMPLE.COM",
+        note: "制服の見積もりをお願いします。"
+      }
+    });
+
+    expect(inquiry.status).toBe("new");
+    expect(inquiry.customer.name).toBe("沖縄 太郎");
+    expect(inquiry.customer.email).toBe("taro@example.com");
+    expect(inquiry.estimatedPrice).toBe(50 * 8600 + 18000);
+    expect(inquiry.estimatedPrice).not.toBe(1);
+  });
+
+  it("should reject invalid inquiry input", async () => {
+    await expect(client.saveInquiry({
+      configuration: { quantity: 50 },
+      customer: { name: "", email: "invalid", note: "" }
+    })).rejects.toThrow("お名前を入力してください");
+  });
+
+  it("should return the existing inquiry for the same request key", async () => {
+    const payload = {
+      requestKey: "request-double-submit",
+      configuration: { quantity: 10 },
+      customer: {
+        name: "沖縄 花子",
+        email: "hanako@example.com",
+        note: "同じ内容を二重保存しないでください。"
+      }
+    };
+
+    const first = await client.saveInquiry(payload);
+    const second = await client.saveInquiry(payload);
+    const stored = JSON.parse(localStorage.getItem(mockConfig.storageKeys.inquiries));
+
+    expect(second.id).toBe(first.id);
+    expect(stored).toHaveLength(1);
   });
 });

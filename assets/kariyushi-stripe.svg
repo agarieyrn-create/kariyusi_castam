@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" role="img" aria-labelledby="title desc">
+  <title id="title">紺ストライプのかりゆしウェア</title>
+  <desc id="desc">沖縄の海を思わせる紺と水色のストライプシャツ</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#eaf4f4"/><stop offset="1" stop-color="#c4dfe8"/></linearGradient>
+    <linearGradient id="cloth" x1="0" x2="1"><stop stop-color="#102d43"/><stop offset=".48" stop-color="#1a4965"/><stop offset="1" stop-color="#0d273a"/></linearGradient>
+    <pattern id="stripe" width="86" height="86" patternUnits="userSpaceOnUse"><rect width="22" height="86" fill="#65c1d8" opacity=".72"/><rect x="34" width="6" height="86" fill="#f7f1e8" opacity=".8"/></pattern>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="180%"><feDropShadow dx="0" dy="28" stdDeviation="24" flood-color="#123047" flood-opacity=".24"/></filter>
+  </defs>
+  <rect width="1200" height="900" fill="url(#bg)"/>
+  <circle cx="1010" cy="120" r="240" fill="#fff" opacity=".32"/><path d="M0 745c220-80 400-52 580 8s390 94 620 10v137H0Z" fill="#123047" opacity=".09"/>
+  <g filter="url(#shadow)">
+    <path d="M384 178 236 290l78 152 95-56v338c122 54 260 54 382 0V386l95 56 78-152-148-112-114-35H498Z" fill="url(#cloth)"/>
+    <path d="M384 178 236 290l78 152 95-56v338c122 54 260 54 382 0V386l95 56 78-152-148-112-114-35H498Z" fill="url(#stripe)" opacity=".74"/>
+    <path d="m498 143 102 116 102-116-28-8-74 58-74-58Z" fill="#f7f1e8"/><path d="M600 259v493" stroke="#f7f1e8" stroke-width="15" opacity=".88"/>
+    <g fill="#f28c64"><circle cx="600" cy="338" r="7"/><circle cx="600" cy="424" r="7"/><circle cx="600" cy="510" r="7"/><circle cx="600" cy="596" r="7"/></g>
+  </g>
+  <text x="70" y="94" font-family="sans-serif" font-size="24" font-weight="700" fill="#123047" letter-spacing="5">MARINE STRIPE</text>
+</svg>
