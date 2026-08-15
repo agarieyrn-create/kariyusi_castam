@@ -1,9 +1,11 @@
-(function () {
-  "use strict";
+import { config } from './config.js';
+import { seed } from './mock-db.js';
+import { KariyushiApiClient } from './api-client.js';
+import * as renderers from './renderers/index.js';
+import * as store from './design-store.js';
+import { validateBrief, validateEdit } from './validation.js';
 
-  const config = window.KariyushiConfig;
-  const api = new window.KariyushiApiClient(config, window.KariyushiSeed);
-  const renderers = window.KariyushiRenderers;
+const api = new KariyushiApiClient(config, seed);
 
   const state = {
     catalog: null,
@@ -184,29 +186,31 @@
     syncBodyToggle();
   }
 
+  function setBusy(busy, label = '提案を準備しています…') {
+    document.body.classList.toggle('is-busy', busy);
+    const submit = document.querySelector('#briefForm button[type="submit"]');
+    const retry = document.getElementById('retryButton');
+    if (submit) { submit.disabled = busy; submit.setAttribute('aria-busy', String(busy)); submit.dataset.originalLabel ||= submit.textContent; submit.textContent = busy ? label : submit.dataset.originalLabel; }
+    if (retry) retry.hidden = busy;
+    const status = document.getElementById('appStatus');
+    if (status && busy) { status.textContent = label; status.className = 'status-banner is-loading'; }
+  }
+  function showAppError(error) {
+    const message = error?.message || '処理に失敗しました。'; const status = document.getElementById('appStatus');
+    if (status) { status.textContent = `${message} しばらく待ってから再試行してください。`; status.className = 'status-banner is-error'; }
+    console.error(error);
+  }
   async function generateDesigns() {
-    state.brief = collectBrief();
-    state.session = await api.createDesignSession(state.brief);
-    const result = await api.generateDesigns(state.session.id, state.brief);
-    state.proposals = result.proposals;
-    if (state.proposals && state.proposals.length > 0) {
-      state.selectedId = state.proposals[0].id;
-      const first = state.proposals[0];
-      state.edit = {
-        ...state.edit,
-        palette: first.palette,
-        logo: first.logo,
-        collar: first.collar,
-        button: first.button,
-        density: first.density,
-        scale: first.scale,
-        assetId: first.assetId
-      };
-    }
-    state.estimate = await api.createEstimate(state.brief.quantity);
-    const fit = renderers.fitAnalysis(state.model, state.catalog.sizeTable);
-    state.model.size = fit.recommendedSize;
-    renderAll();
+    setBusy(true);
+    try {
+      state.brief = validateBrief(collectBrief(), config.defaultBrief); state.session = await api.createDesignSession(state.brief);
+      const result = await api.generateDesigns(state.session.id, state.brief); state.proposals = result.proposals;
+      if (!state.proposals.length) throw new Error('提案を作成できませんでした。');
+      state.selectedId = state.proposals[0].id; const first = state.proposals[0];
+      state.edit = validateEdit({ ...state.edit, palette: first.palette, logo: first.logo, collar: first.collar, button: first.button, density: first.density, scale: first.scale, assetId: first.assetId }, config.defaultEdit);
+      state.estimate = await api.createEstimate(state.brief.quantity); const fit = renderers.fitAnalysis(state.model, state.catalog.sizeTable); state.model.size = fit.recommendedSize; renderAll();
+      const status = document.getElementById('appStatus'); if (status) { status.textContent = '3案の提案を更新しました。'; status.className = 'status-banner is-success'; }
+    } catch (error) { showAppError(error); } finally { setBusy(false); }
   }
 
   function setupChoices() {
@@ -369,7 +373,8 @@
       await generateDesigns();
       document.getElementById("proposals")?.scrollIntoView({ behavior: "smooth" });
     });
-    document.getElementById("regenerate")?.addEventListener("click", generateDesigns);
+    document.getElementById('regenerate')?.addEventListener('click', generateDesigns);
+    document.getElementById('retryButton')?.addEventListener('click', generateDesigns);
     document.getElementById("motifSelect")?.addEventListener("input", () => {
       syncLiveBrief();
       updateAIAssistant();
@@ -460,7 +465,7 @@
     const store = window.KariyushiDesignStore;
     if (!editor || !store) return;
 
-    editor.init("fabricCanvas", (dataUrl) => {
+    editor.init("fabricCanvas", (_dataUrl) => {
       /* 将来: 3Dテクスチャに反映 */
     });
 
@@ -514,11 +519,7 @@
 
     // Share URL
     document.getElementById("shareUrlBtn")?.addEventListener("click", async () => {
-      const designData = {
-        fabricJson: editor.toJSON(),
-        brief: state.brief,
-        edit: state.edit
-      };
+      const designData = { schema: 'kariyushi-share', version: store.SHARE_SCHEMA_VERSION, fabricJson: editor.toJSON(), brief: state.brief, edit: state.edit, model: state.model };
       const ok = await store.copyShareUrl(designData);
       showStudioStatus(ok ? "共有URLをクリップボードにコピーしました" : "コピーに失敗しました");
     });
@@ -546,6 +547,8 @@
 
   async function init() {
     state.catalog = await api.getCatalog();
+    const shared = store.loadFromUrl();
+    if (shared) { state.brief = validateBrief(shared.brief, config.defaultBrief); state.edit = validateEdit(shared.edit, config.defaultEdit); if (shared.model) state.model = { ...state.model, ...shared.model }; }
     setupChoices();
     setupCatalogControls();
     setupEditor();
@@ -564,4 +567,3 @@
       status.textContent = "アプリ初期化エラー: " + err.message;
     }
   });
-})();

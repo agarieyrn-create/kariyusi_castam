@@ -1,9 +1,6 @@
-(function () {
-  "use strict";
+const asset = (id, file, title, type, tags) => ({ id, file, title, type, tags });
 
-  const asset = (id, file, title, type, tags) => ({ id, file, title, type, tags });
-
-  window.KariyushiSeed = {
+  export const seed = {
     palettes: {
       "海風ブルー": { base: "#e7f7f7", accent: "#1c7f93", sub: "#f2b64b", dark: "#173d45" },
       "月桃ホワイト": { base: "#fbf7ea", accent: "#587f58", sub: "#d8a044", dark: "#2f4737" },
@@ -81,4 +78,4 @@
       "3L": { chest: 132, shoulder: 53, length: 80, sleeve: 27 }
     }
   };
-})();
+window.KariyushiSeed = seed;

@@ -20,6 +20,7 @@
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
+    <div id="appStatus" class="status-banner" role="status" aria-live="polite" aria-atomic="true"></div>
     <div class="page-noise" aria-hidden="true"></div>
     <header class="app-header">
       <div class="header-left">
@@ -217,7 +218,7 @@
             <h2>比較表ではなく、選びたくなる提案ギャラリーへ</h2>
             <p class="section-lead">世界観の違う3案を編集的に比較し、もっとも近い方向性から磨き込みます。</p>
           </div>
-          <button id="regenerate" class="button secondary ghost-lux" type="button">再提案</button>
+          <button id="regenerate" aria-describedby="appStatus" class="button secondary ghost-lux" type="button">再提案</button>
         </div>
         <div id="proposalList" class="proposal-grid"></div>
       </section>
@@ -469,14 +470,10 @@
         <p>© 2026 KARIYUSHI CUSTOM STUDIO — DIGITAL TWIN PROTOTYPE</p>
       </div>
     </footer>
-
-    <script src="scripts/config.js" defer></script>
-    <script src="scripts/mock-db.js" defer></script>
-    <script src="scripts/api-client.js" defer></script>
-    <script src="scripts/renderers.js" defer></script>
-    <script src="scripts/design-store.js" defer></script>
-    <script src="scripts/fabric-editor.js" defer></script>
-    <script src="scripts/three-viewer.js" defer></script>
-    <script src="scripts/app.js" defer></script>
+    <script type="module" src="scripts/fabric-editor.js"></script>
+    <script type="module" src="scripts/three-viewer.js"></script>
+    <noscript><div class="status-banner is-error">JavaScriptを有効にするとデザインスタジオを利用できます。</div></noscript>
+    <script type="module" src="scripts/app.js"></script>
+      <button id="retryButton" class="retry-button" type="button" hidden>もう一度試す</button>
   </body>
 </html>

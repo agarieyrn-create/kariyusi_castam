@@ -1,7 +1,4 @@
-(function () {
-  "use strict";
-
-  const yen = new Intl.NumberFormat("ja-JP");
+const yen = new Intl.NumberFormat("ja-JP");
   const logoLabels = { leftChest: "左胸", sleeve: "袖", back: "背面", none: "なし" };
   const laneLabels = {
     uniform: "Atelier Uniform",
@@ -413,16 +410,5 @@
     }
     return renderModelSVG(target, proposal, palettes, edit, model, sizeTable, assets, config);
   }
-
-  window.KariyushiRenderers = {
-    renderHero,
-    renderProposals,
-    renderAssets,
-    renderEditor,
-    renderModel,
-    renderFitReport,
-    renderDesignNotes,
-    renderSpec,
-    fitAnalysis
-  };
-})();
+export { esc, renderHero, renderProposals, renderAssets, renderEditor, renderModel, renderFitReport, renderDesignNotes, renderSpec, fitAnalysis, designScore, shirtSvg };
+window.KariyushiRenderers = { esc, renderHero, renderProposals, renderAssets, renderEditor, renderModel, renderFitReport, renderDesignNotes, renderSpec, fitAnalysis, designScore, shirtSvg };

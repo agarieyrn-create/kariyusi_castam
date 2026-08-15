@@ -2502,3 +2502,12 @@ textarea { min-height: 130px; }
 }
 
 
+
+/* Quality layer: semantic status, reduced motion, and failure recovery. */
+:root { --status-bg: #102a30; --status-error: #9f3d49; --status-success: #2d765b; --motion-fast: 160ms; }
+.status-banner { position: fixed; z-index: 100; inset: 1rem 1rem auto auto; max-width: min(32rem, calc(100vw - 2rem)); padding: .75rem 1rem; border: 1px solid color-mix(in srgb, var(--accent, #7ed6d0) 30%, transparent); border-radius: 999px; background: var(--status-bg); color: #fff; box-shadow: 0 12px 40px #0003; opacity: 0; transform: translateY(-.5rem); pointer-events: none; transition: opacity var(--motion-fast) ease, transform var(--motion-fast) ease; }
+.status-banner:not(:empty) { opacity: 1; transform: translateY(0); }
+.status-banner.is-error { background: var(--status-error); } .status-banner.is-success { background: var(--status-success); }
+.retry-button { position: fixed; z-index: 101; inset: 4.5rem 1rem auto auto; border: 0; border-radius: 999px; padding: .65rem 1rem; background: #fff; color: #102a30; box-shadow: 0 8px 24px #0003; cursor: pointer; }
+.is-busy { cursor: progress; } .is-busy main { filter: saturate(.85); }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; } }

@@ -1,5 +1,5 @@
 -- 1. 拡張機能の作成
-create extension if not exists "uuid-ossp";
+create extension if not exists pgcrypto;
 
 -- 2. テーブル定義
 
@@ -148,25 +148,28 @@ create index if not exists idx_generated_designs_session_id on generated_designs
 create index if not exists idx_estimates_session_id on estimates(session_id) where deleted_at is null;
 create index if not exists idx_inquiries_session_id on inquiries(session_id) where deleted_at is null;
 
--- 4. RLS (Row Level Security) 定義
+-- 4. RLS: owner or a server-signed anonymous session only.
+-- The session_id claim is set by the trusted server after issuing a signed token.
+create schema if not exists app;
+create or replace function app.current_session_id() returns uuid language sql stable as $$
+  select nullif(current_setting('request.jwt.claims', true)::jsonb ->> 'session_id', '')::uuid
+$$;
 
 alter table design_sessions enable row level security;
 alter table generated_designs enable row level security;
 alter table estimates enable row level security;
 alter table inquiries enable row level security;
 
--- 基本的な匿名アクセス権限ポリシー（サンプル。本番運用に合わせて調整）
-create policy "Allow insert for anonymous users on sessions"
-  on design_sessions for insert to anon with check (true);
+drop policy if exists "Allow insert for signed session" on design_sessions;
+drop policy if exists "Allow select for own sessions" on design_sessions;
+drop policy if exists "Allow select for anonymous on designs" on generated_designs;
+drop policy if exists "Allow insert/select for estimates" on estimates;
+drop policy if exists "Allow insert for inquiries" on inquiries;
 
-create policy "Allow select for own sessions"
-  on design_sessions for select to anon using (true); -- 実際は session_id による制限を推奨
-
-create policy "Allow select for anonymous on designs"
-  on generated_designs for select to anon using (true);
-
-create policy "Allow insert/select for estimates"
-  on estimates for all to anon using (true);
-
-create policy "Allow insert for inquiries"
-  on inquiries for insert to anon with check (true);
+create policy "signed session may create its session" on design_sessions for insert to anon with check (id = app.current_session_id());
+create policy "owner or signed session may read sessions" on design_sessions for select using (user_id = auth.uid() or id = app.current_session_id());
+create policy "owner or signed session may read designs" on generated_designs for select using (exists (select 1 from design_sessions s where s.id = generated_designs.session_id and (s.user_id = auth.uid() or s.id = app.current_session_id())));
+create policy "signed session may write estimates" on estimates for insert to anon with check (session_id = app.current_session_id());
+create policy "owner or signed session may read estimates" on estimates for select using (session_id = app.current_session_id() or exists (select 1 from design_sessions s where s.id = estimates.session_id and s.user_id = auth.uid()));
+create policy "signed session may create inquiry" on inquiries for insert to anon with check (session_id = app.current_session_id());
+create policy "owner or signed session may read inquiries" on inquiries for select using (session_id = app.current_session_id() or exists (select 1 from design_sessions s where s.id = inquiries.session_id and s.user_id = auth.uid()));
